@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coin Breaker (New)</title>
+    <link rel="stylesheet" href="../style.css?v=t26063023" />
+    <style>
+      /* /new: 프리셋/컨트롤 없이 “렌더링 + 수치조정”만 */
+      .app {
+        grid-template-columns: 520px 600px;
+      }
+      .controls {
+        width: 600px;
+        min-width: 600px;
+        max-width: 600px;
+      }
+      .controls h1 {
+        margin: 0 0 14px;
+        font-size: 18px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="topbar-left">Coin Breaker</div>
+      <div class="topbar-right">버전 <span id="buildVersion">t26063023</span></div>
+    </div>
+
+    <div class="app">
+      <div class="preview">
+        <div class="card-shell">
+          <div class="el-dialog">
+            <div class="el-dialog__header">
+              <span class="el-dialog__title"></span>
+            </div>
+            <div class="el-dialog__body">
+              <div class="dg-body cursor-pointer" id="cardRoot">
+                <div class="dgb-overlay"></div>
+                <div class="dgb-content">
+                  <div class="dgb-header">
+                    <h2 class="dgb-title" data-nav-target=".dgb-title">futuresusdt</h2>
+                  </div>
+
+                  <div class="dgb-values">
+                    <div class="dgb-pct" data-nav-target="#txtPercent">
+                      <span id="txtPercent">19.75</span> %
+                    </div>
+                    <div class="dgb-amt" id="txtProfit" data-nav-target="#txtProfit">10,229,614 원</div>
+                  </div>
+
+                  <div class="dgb-separator"></div>
+
+                  <div class="dgb-grid">
+                    <div class="dgb-grid-item">
+                      <label class="dgb-grid-label" data-nav-target=".dgb-grid-item:nth-child(1) .dgb-grid-label">코인</label>
+                      <div class="dgb-grid-value-wrap">
+                        <span id="txtSymbol" data-nav-target="#txtSymbol">DOGE/USDT</span>
+                        <span id="txtSide" class="dgb-side-badge SHORT" data-nav-target="#txtSide">SHORT</span>
+                      </div>
+                    </div>
+                    <div class="dgb-grid-item">
+                      <label class="dgb-grid-label" data-nav-target=".dgb-grid-item:nth-child(2) .dgb-grid-label">레버리지</label>
+                      <span id="txtLeverage" class="dgb-grid-value" data-nav-target="#txtLeverage">100x</span>
+                    </div>
+                    <div class="dgb-grid-item">
+                      <label class="dgb-grid-label" data-nav-target=".dgb-grid-item:nth-child(3) .dgb-grid-label">진입가격</label>
+                      <span id="txtEntry" class="dgb-grid-value" data-nav-target="#txtEntry">0.08608</span>
+                    </div>
+                    <div class="dgb-grid-item">
+                      <label class="dgb-grid-label" data-nav-target=".dgb-grid-item:nth-child(4) .dgb-grid-label">종료가격</label>
+                      <span id="txtExit" class="dgb-grid-value" data-nav-target="#txtExit">0.08591</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="button" class="dgb-close-btn" data-nav-target=".dgb-close-btn">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-xicon w-4 h-4"
+                  >
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                  </svg>
+                  <span class="sr-only">Close</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="generate-wrap">
+          <button id="btnGenerate" class="primary" type="button">생성</button>
+          <div id="warningNotice" class="warning-notice">
+            <span class="warn-long">LONG</span> / <span class="warn-short">SHORT</span> <span class="warn-text">확인요망</span>
+          </div>
+          <div class="generate-hint">생성 버튼을 누르세요.</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <h1>수치 조정</h1>
+
+        <div class="grid">
+          <label>수익 퍼센트(최소)<input id="inpPercentMin" type="number" step="0.01" value="20" /></label>
+          <label>수익 퍼센트(최대)<input id="inpPercentMax" type="number" step="0.01" value="25" /></label>
+
+          <label>수익금(만원, 최소)<input id="inpProfitMin" type="number" step="1" value="300" /></label>
+          <label>수익금(만원, 최대)<input id="inpProfitMax" type="number" step="1" value="1000" /></label>
+
+          <label class="span-2">심볼(DOGE/USDT 등)<input id="inpSymbol" type="text" value="DOGE/USDT" /></label>
+
+          <label class="span-2">
+            포지션(LONG/SHORT)
+            <div class="side-toggle" role="group" aria-label="포지션 선택">
+              <button id="btnSideLong" class="secondary side-btn" type="button">LONG</button>
+              <button id="btnSideShort" class="secondary side-btn" type="button">SHORT</button>
+              <input id="inpSide" type="hidden" value="" />
+            </div>
+          </label>
+
+          <label class="span-2">
+            진입가격 / 실제진입가(자동)
+            <div class="dual-input">
+              <input id="inpEntry" type="text" value="0.11445" />
+              <input id="inpEntryReal" type="text" value="0.11445" disabled />
+            </div>
+          </label>
+
+          <label class="span-2">종료가격(자동)<input id="inpExit" type="text" value="0.00000" disabled /></label>
+          <label class="span-2">레버리지<input id="inpLeverage" type="text" value="100x" /></label>
+
+          <label class="span-2">
+            배경 확대/축소 (0.50~2.00, 1.00=기본)
+            <input id="inpBgZoom" type="number" step="0.001" min="0.5" max="2" value="1.000" />
+            <div class="zoom-stepper">
+              <button id="btnZoomOut" class="secondary" type="button">축소 -5%</button>
+              <button id="btnZoomIn" class="secondary" type="button">확대 +5%</button>
+            </div>
+          </label>
+
+          <label class="span-2">
+            배경 위치 이동 (X / Y)
+            <div class="dual-input">
+              <input id="inpBgShiftX" type="number" placeholder="X" value="0" />
+              <input id="inpBgShiftY" type="number" placeholder="Y" value="0" />
+            </div>
+            <div class="shift-stepper">
+              <div class="shift-row">
+                <button id="btnShiftUp" class="secondary" type="button">▲ 위로</button>
+              </div>
+              <div class="shift-row">
+                <button id="btnShiftLeft" class="secondary" type="button">◀ 왼쪽</button>
+                <button id="btnShiftReset" class="secondary" type="button">↺ 리셋</button>
+                <button id="btnShiftRight" class="secondary" type="button">오른쪽 ▶</button>
+              </div>
+              <div class="shift-row">
+                <button id="btnShiftDown" class="secondary" type="button">▼ 아래로</button>
+              </div>
+            </div>
+          </label>
+
+          <label>생성 개수<input id="inpCount" type="number" min="1" max="300" value="1" /></label>
+          <label>ZIP 파일명 Prefix<input id="inpPrefix" type="text" value="screenshot" /></label>
+        </div>
+
+        <div class="actions">
+          <button id="btnDownloadZip" class="secondary" type="button">ZIP 저장</button>
+          <button id="btnReroll" class="secondary" type="button">미리보기 새로고침</button>
+          <button id="btnReset" class="secondary" type="button">초기화</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+    <div id="centerTip" class="center-tip" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="../app.js?v=t26063023"></script>
+  </body>
+</html>
+

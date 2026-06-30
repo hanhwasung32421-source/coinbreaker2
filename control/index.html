@@ -210,7 +210,14 @@ button.secondary{ background:#0c1220; }
   inset: 0;
   pointer-events: none;
   z-index: 2;
-  background-color: rgba(34, 197, 94, 0.10);
+  opacity: 0.38;
+  background-image:
+    linear-gradient(to right, rgba(231, 238, 252, 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(231, 238, 252, 0.22) 1px, transparent 1px),
+    linear-gradient(to right, rgba(231, 238, 252, 0.10) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(231, 238, 252, 0.10) 1px, transparent 1px);
+  background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
+  background-position: 0 0, 0 0, 0 0, 0 0;
 }
 
 .dgb-content {
@@ -471,14 +478,15 @@ button.secondary{ background:#0c1220; }
 }
 .nav-pad {
   display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-columns: repeat(3, 36px);
+  grid-template-rows: repeat(3, 36px);
+  gap: 4px;
   justify-content: center;
   align-items: center;
-  gap: 4px;
 }
-.nav-pad-middle {
-  display: flex;
-  gap: 4px;
+.nav-pad .spacer {
+  width: 36px;
+  height: 36px;
 }
 .nav-pad button {
   width: 36px;
@@ -571,7 +579,7 @@ button.secondary{ background:#0c1220; }
       <div class="topbar-left">
         Coin Breaker
         <a
-          href="./new/"
+          href="../new/"
           style="margin-left:10px; font-size:12px; padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0c1220; color:rgba(231,238,252,.92); text-decoration:none;"
           >일반버전</a
         >
@@ -587,7 +595,7 @@ button.secondary{ background:#0c1220; }
             </div>
             <div class="el-dialog__body">
               <div class="dg-body cursor-pointer" id="cardRoot">
-                <div class="dgb-overlay"></div>
+                <div class="dgb-overlay" data-html2canvas-ignore="true"></div>
                 <img id="imgOverlay" data-html2canvas-ignore="true" style="position:absolute; inset:0; pointer-events:none; z-index:9999; opacity:0.5; display:none; transform-origin:top left;" />
                 <div class="dgb-content">
                   <div class="dgb-header">
@@ -753,6 +761,31 @@ button.secondary{ background:#0c1220; }
           <div class="copied-preview-title">캡쳐 이미지 미리보기</div>
           <img id="croppedPreviewImg" class="copied-preview-img" alt="cropped preview" />
         </div>
+                <div class="detail-control-wrap" style="margin-top: 14px;">
+          <div class="detail-control-title">비교용 원본 이미지 겹치기 (Overlay)</div>
+          <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+            <label style="font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:4px; cursor: pointer;">
+              원본 이미지 파일 선택
+              <input type="file" id="inpOverlayFile" accept="image/*" style="font-size:12px;" />
+            </label>
+            <div class="control-row" style="display: flex; flex-direction: column; gap: 6px;">
+              <span class="control-label" style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">투명도: <span id="lblOverlayOpacity">0.5</span></span>
+              <input type="range" id="valOverlayOpacity" min="0" max="1" step="0.05" value="0.5" style="width: 100%; accent-color: var(--accent);" />
+            </div>
+            <div class="control-row" style="display: flex; flex-direction: column; gap: 6px;">
+              <span class="control-label" style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">크기(배율): <span id="lblOverlayScale">100%</span></span>
+              <input type="range" id="valOverlayScale" min="0.2" max="3" step="0.02" value="1.0" style="width: 100%; accent-color: var(--accent);" />
+            </div>
+            <div class="control-row" style="display: flex; flex-direction: column; gap: 6px;">
+              <span class="control-label" style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">가로 위치 (X): <span id="lblOverlayX">0px</span></span>
+              <input type="range" id="valOverlayX" min="-300" max="300" step="1" value="0" style="width: 100%; accent-color: var(--accent);" />
+            </div>
+            <div class="control-row" style="display: flex; flex-direction: column; gap: 6px;">
+              <span class="control-label" style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">세로 위치 (Y): <span id="lblOverlayY">0px</span></span>
+              <input type="range" id="valOverlayY" min="-300" max="300" step="1" value="0" style="width: 100%; accent-color: var(--accent);" />
+            </div>
+          </div>
+        </div>
         <div class="detail-control-wrap">
           <div class="detail-control-title">텍스트 & 뱃지 세부 조정 (Navigator)</div>
           <div class="detail-control-layout">
@@ -784,14 +817,16 @@ button.secondary{ background:#0c1220; }
             <div class="control-right">
               <div class="control-section">
                 <span class="section-label">위치 이동 (상하좌우)</span>
-                <div class="nav-pad">
-                  <button type="button" id="btnNavUp" class="secondary">▲</button>
-                  <div class="nav-pad-middle">
-                    <button type="button" id="btnNavLeft" class="secondary">◀</button>
-                    <button type="button" id="btnNavReset" class="secondary">↺</button>
-                    <button type="button" id="btnNavRight" class="secondary">▶</button>
-                  </div>
-                  <button type="button" id="btnNavDown" class="secondary">▼</button>
+                <div class="nav-pad" aria-label="넘패드형 위치 이동">
+                  <div class="spacer"></div>
+                  <button type="button" id="btnNavUp" class="secondary" title="8 (위)">▲</button>
+                  <div class="spacer"></div>
+                  <button type="button" id="btnNavLeft" class="secondary" title="4 (왼쪽)">◀</button>
+                  <button type="button" id="btnNavReset" class="secondary" title="5 (리셋)">↺</button>
+                  <button type="button" id="btnNavRight" class="secondary" title="6 (오른쪽)">▶</button>
+                  <div class="spacer"></div>
+                  <button type="button" id="btnNavDown" class="secondary" title="2 (아래)">▼</button>
+                  <div class="spacer"></div>
                 </div>
                 <div class="step-row">
                   <span>이동 간격:</span>
@@ -839,6 +874,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="./app.js?v=t26063023"></script>
+    <script src="../app.js?v=t26063023"></script>
   </body>
 </html>

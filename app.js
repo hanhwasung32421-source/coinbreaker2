@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26063009";
+  const BUILD_VERSION = "t26063023";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -77,8 +77,9 @@
     txtLeverage: document.getElementById("txtLeverage"),
     txtEntry: document.getElementById("txtEntry"),
     txtExit: document.getElementById("txtExit"),
-    buildVersion: document.getElementById("buildVersion"),
   };
+
+  let cardCustomStyles = {};
 
   const sideUi = {
     longBtn: document.getElementById("btnSideLong"),
@@ -98,7 +99,7 @@
   let lastPresetPhrase = "";
   let lastCroppedPreviewUrl = null;
   let bgShiftX = 0;
-  let bgShiftY = 28;
+  let bgShiftY = 0;
 
   const DEFAULT_PHRASE_CFG = {
     fmt: ["int", "2", "1"],
@@ -231,7 +232,8 @@
   function randomEntryFromBase(entryBaseText) {
     const baseInt = parseEntryToInt(entryBaseText);
     if (baseInt == null) return String(entryBaseText || "").trim();
-    return trimTrailingZeroIn5dp(entryIntToText(baseInt));
+    const next = Math.max(0, baseInt + [-2, -1, 0, 1, 2][randInt(0, 4)]);
+    return trimTrailingZeroIn5dp(entryIntToText(next));
   }
 
   function parseLeverage(text) {
@@ -368,7 +370,7 @@
   function collectState() {
     const toVal = (el) => (el ? String(el.value ?? "") : "");
     return {
-      v: 1,
+      v: 3,
       inputs: {
         percentMin: toVal(els.percentMin),
         percentMax: toVal(els.percentMax),
@@ -384,6 +386,7 @@
       },
       bg: { shiftX: bgShiftX, shiftY: bgShiftY },
       phraseCfg,
+      cardCustomStyles,
     };
   }
 
@@ -412,7 +415,7 @@
       const sy = typeof state.bg.shiftY === "number" ? state.bg.shiftY : bgShiftY;
       if (sx === 0 && sy === 0) {
         bgShiftX = 0;
-        bgShiftY = 28;
+        bgShiftY = 0;
       } else {
         bgShiftX = sx;
         bgShiftY = sy;
@@ -430,6 +433,9 @@
     }
     fillPhraseUiFromCfg();
     syncBgShiftInputs();
+
+    cardCustomStyles = state.cardCustomStyles || {};
+
     generatedItems = [];
     previewIndex = -1;
     samplePercent = null;
@@ -493,13 +499,13 @@
 
   function applyCardBackground() {
     if (!els.cardRoot) return;
-    // DOM 배경은 zoom<1에서 가로가 줄어 "오른쪽이 비는" 문제가 생김.
-    // 원본처럼 항상 가로는 꽉 차게 유지하고(>=100%), zoom은 확대(>=1)에서만 반영.
-    const z = clamp(els.bgZoom?.value, 0.5, 2);
-    els.cardRoot.style.backgroundRepeat = "repeat-y";
-    els.cardRoot.style.backgroundSize = `${(z * 100).toFixed(3)}% auto`;
-    // C의 배경 X/Y는 "좌상단 기준(px)"으로 해석 (0,0이면 왼쪽 위에 맞춰짐)
-    els.cardRoot.style.backgroundPosition = `${Math.round(bgShiftX)}px ${Math.round(bgShiftY)}px`;
+    // zoom이 1 미만이어도 최소 100% 폭을 유지하여 빈 공간 방지
+    const z = clamp(els.bgZoom?.value, 0.5, 3);
+    const sizePct = Math.max(100, z * 100);
+    els.cardRoot.style.backgroundRepeat = "no-repeat";
+    els.cardRoot.style.backgroundSize = `${sizePct.toFixed(3)}% auto`;
+    // 기본적으로 중심(50% 50%)을 기준으로 shift 값만큼 이동
+    els.cardRoot.style.backgroundPosition = `calc(50% + ${Math.round(bgShiftX)}px) calc(50% + ${Math.round(bgShiftY)}px)`;
   }
 
   function setSide(value, { shouldSave = true } = {}) {
@@ -533,7 +539,10 @@
   }
 
   function renderCard(item) {
-    const percentText = Number(item.percent).toFixed(2);
+    let percentText = Number(item.percent).toFixed(2);
+    if (percentText.includes(".")) {
+      percentText = percentText.replace(/0+$/, "").replace(/\.$/, "");
+    }
     if (els.txtPercent) els.txtPercent.textContent = percentText;
     if (els.txtProfit) els.txtProfit.textContent = formatProfit(item.profit);
     if (els.txtSymbol) els.txtSymbol.textContent = String(els.symbol?.value || "").trim();
@@ -568,6 +577,7 @@
       els.txtExit.textContent = exitVal.endsWith("USDT") ? exitVal : `${exitVal} USDT`;
     }
     applyCardBackground();
+    applyAllCustomStylesAndTextOverrides();
   }
 
   function renderPreview() {
@@ -1000,7 +1010,7 @@
         els.count.value = String(DEFAULTS.count);
         els.prefix.value = DEFAULTS.prefix;
         bgShiftX = 0;
-        bgShiftY = 28;
+        bgShiftY = 0;
         setSide(DEFAULTS.side, { shouldSave: false });
         generatedItems = [];
         previewIndex = -1;
@@ -1016,7 +1026,7 @@
 
     const bumpZoom = (delta) => {
       const cur = Number(els.bgZoom?.value);
-      els.bgZoom.value = clamp((Number.isFinite(cur) ? cur : 1) + delta, 0.5, 2).toFixed(3);
+      els.bgZoom.value = clamp((Number.isFinite(cur) ? cur : 1) + delta, 0.5, 3).toFixed(3);
       renderAll();
       scheduleCloudSave();
     };
@@ -1037,7 +1047,7 @@
     if (els.shiftReset) {
       els.shiftReset.addEventListener("click", () => {
         bgShiftX = 0;
-        bgShiftY = 28;
+        bgShiftY = 0;
         syncBgShiftInputs();
         renderAll();
         scheduleCloudSave();
@@ -1121,6 +1131,309 @@
         }
       });
     });
+
+    // Unified Navigator event bindings
+    const selTarget = document.getElementById("selNavTarget");
+    const inpText = document.getElementById("inpNavText");
+    const clrPicker = document.getElementById("clrNavColor");
+    const selFont = document.getElementById("selNavFont");
+
+    if (selTarget) {
+      selTarget.addEventListener("change", () => {
+        updateNavControlsForTarget(selTarget.value);
+      });
+    }
+
+    if (inpText) {
+      const updateText = () => {
+        const selector = selTarget.value;
+        if (!cardCustomStyles[selector]) {
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null };
+        }
+        cardCustomStyles[selector].text = inpText.value;
+        renderAll();
+        scheduleCloudSave();
+      };
+      inpText.addEventListener("input", updateText);
+      inpText.addEventListener("change", updateText);
+    }
+
+    if (clrPicker) {
+      clrPicker.addEventListener("input", () => {
+        const selector = selTarget.value;
+        if (!cardCustomStyles[selector]) {
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null };
+        }
+        cardCustomStyles[selector].color = clrPicker.value;
+        renderAll();
+        scheduleCloudSave();
+      });
+    }
+
+    if (selFont) {
+      selFont.addEventListener("change", () => {
+        const selector = selTarget.value;
+        if (!cardCustomStyles[selector]) {
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null };
+        }
+        cardCustomStyles[selector].font = selFont.value;
+        renderAll();
+        scheduleCloudSave();
+      });
+    }
+
+    const btnBolder = document.getElementById("btnNavWeightBolder");
+    if (btnBolder) {
+      btnBolder.addEventListener("click", () => {
+        const selector = selTarget.value;
+        if (!cardCustomStyles[selector]) {
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null };
+        }
+        cardCustomStyles[selector].weight = "700";
+        renderAll();
+        scheduleCloudSave();
+      });
+    }
+
+    const btnLighter = document.getElementById("btnNavWeightLighter");
+    if (btnLighter) {
+      btnLighter.addEventListener("click", () => {
+        const selector = selTarget.value;
+        if (!cardCustomStyles[selector]) {
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null };
+        }
+        cardCustomStyles[selector].weight = "400";
+        renderAll();
+        scheduleCloudSave();
+      });
+    }
+
+    const adjustSize = (delta) => {
+      const selector = selTarget.value;
+      if (!cardCustomStyles[selector]) {
+        cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null };
+      }
+      let curSize = cardCustomStyles[selector].size;
+      if (curSize == null) {
+        const el = els.cardRoot.querySelector(selector);
+        if (el) {
+          curSize = parseFloat(window.getComputedStyle(el).fontSize) || 16;
+        } else {
+          curSize = 16;
+        }
+      }
+      cardCustomStyles[selector].size = Math.max(8, Math.round(curSize + delta));
+      renderAll();
+      scheduleCloudSave();
+    };
+
+    const btnSizeUp = document.getElementById("btnNavSizeUp");
+    if (btnSizeUp) btnSizeUp.addEventListener("click", () => adjustSize(1));
+
+    const btnSizeDown = document.getElementById("btnNavSizeDown");
+    if (btnSizeDown) btnSizeDown.addEventListener("click", () => adjustSize(-1));
+
+    const adjustPos = (dx, dy) => {
+      const selector = selTarget.value;
+      if (!cardCustomStyles[selector]) {
+        cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null };
+      }
+      const step = parseInt(document.getElementById("numNavStep").value, 10) || 1;
+      cardCustomStyles[selector].x = (cardCustomStyles[selector].x || 0) + dx * step;
+      cardCustomStyles[selector].y = (cardCustomStyles[selector].y || 0) + dy * step;
+      renderAll();
+      scheduleCloudSave();
+    };
+
+    const btnUp = document.getElementById("btnNavUp");
+    if (btnUp) btnUp.addEventListener("click", () => adjustPos(0, -1));
+
+    const btnDown = document.getElementById("btnNavDown");
+    if (btnDown) btnDown.addEventListener("click", () => adjustPos(0, 1));
+
+    const btnLeft = document.getElementById("btnNavLeft");
+    if (btnLeft) btnLeft.addEventListener("click", () => adjustPos(-1, 0));
+
+    const btnRight = document.getElementById("btnNavRight");
+    if (btnRight) btnRight.addEventListener("click", () => adjustPos(1, 0));
+
+    const btnNavReset = document.getElementById("btnNavReset");
+    if (btnNavReset) {
+      btnNavReset.addEventListener("click", () => {
+        const selector = selTarget.value;
+        if (cardCustomStyles[selector]) {
+          delete cardCustomStyles[selector];
+          renderAll();
+          scheduleCloudSave();
+          updateNavControlsForTarget(selector);
+        }
+      });
+    }
+
+    // Keyboard Arrow Keys and Numpad +/- controls
+    window.addEventListener("keydown", (e) => {
+      const chk = document.getElementById("chkKbControl");
+      if (!chk || !chk.checked) return;
+
+      // Skip keyboard adjustments if user is typing in a text field
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") {
+        if (e.target.id !== "chkKbControl" && e.target.id !== "numNavStep") return;
+      }
+
+      let handled = false;
+      if (e.key === "ArrowUp") {
+        adjustPos(0, -1);
+        handled = true;
+      } else if (e.key === "ArrowDown") {
+        adjustPos(0, 1);
+        handled = true;
+      } else if (e.key === "ArrowLeft") {
+        adjustPos(-1, 0);
+        handled = true;
+      } else if (e.key === "ArrowRight") {
+        adjustPos(1, 0);
+        handled = true;
+      } else if (e.key === "+" || e.key === "Add" || e.key === "=" || e.code === "NumpadAdd") {
+        adjustSize(1);
+        handled = true;
+      } else if (e.key === "-" || e.key === "Subtract" || e.code === "NumpadSubtract") {
+        adjustSize(-1);
+        handled = true;
+      }
+
+      if (handled) {
+        e.preventDefault();
+      }
+    });
+  }
+
+  function applyAllCustomStylesAndTextOverrides() {
+    if (!els.cardRoot) return;
+    Object.keys(cardCustomStyles).forEach((selector) => {
+      const styleData = cardCustomStyles[selector];
+      if (!styleData) return;
+      const el = els.cardRoot.querySelector(selector);
+      if (el) {
+        el.style.transform = `translate(${styleData.x || 0}px, ${styleData.y || 0}px)`;
+        if (styleData.size) el.style.fontSize = styleData.size + "px";
+        else el.style.fontSize = "";
+        if (styleData.weight) el.style.fontWeight = styleData.weight;
+        else el.style.fontWeight = "";
+        if (styleData.color) el.style.color = styleData.color;
+        else el.style.color = "";
+        if (styleData.font && styleData.font !== "inherit") el.style.fontFamily = styleData.font;
+        else el.style.fontFamily = "";
+        if (styleData.text !== undefined && styleData.text !== null && styleData.text !== "") {
+          el.textContent = styleData.text;
+        }
+      }
+    });
+  }
+
+  function updateNavControlsForTarget(selector) {
+    const styleData = cardCustomStyles[selector] || { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null };
+    const el = els.cardRoot.querySelector(selector);
+    const inpText = document.getElementById("inpNavText");
+    if (inpText) {
+      inpText.value = styleData.text !== undefined && styleData.text !== null ? styleData.text : (el ? el.textContent : "");
+    }
+    const clrPicker = document.getElementById("clrNavColor");
+    if (clrPicker) {
+      if (styleData.color) {
+        clrPicker.value = styleData.color;
+      } else if (el) {
+        clrPicker.value = rgbToHex(window.getComputedStyle(el).color) || "#ffffff";
+      } else {
+        clrPicker.value = "#ffffff";
+      }
+    }
+    const selFont = document.getElementById("selNavFont");
+    if (selFont) {
+      selFont.value = styleData.font || "inherit";
+    }
+  }
+
+  function rgbToHex(rgb) {
+    if (!rgb) return "#ffffff";
+    const m = rgb.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+    if (m) {
+      return "#" + ("0" + parseInt(m[1], 10).toString(16)).slice(-2) +
+                   ("0" + parseInt(m[2], 10).toString(16)).slice(-2) +
+                   ("0" + parseInt(m[3], 10).toString(16)).slice(-2);
+    }
+    const mHex = rgb.match(/^#([0-9a-f]{6})$/i);
+    if (mHex) return rgb;
+    return "#ffffff";
+  }
+
+  function bindClickToNavTargets() {
+    if (!els.cardRoot) return;
+    els.cardRoot.querySelectorAll("[data-nav-target]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const selector = el.getAttribute("data-nav-target");
+        const selTarget = document.getElementById("selNavTarget");
+        if (selTarget) {
+          selTarget.value = selector;
+          selTarget.dispatchEvent(new Event("change"));
+          showToastFor("대상 선택 완료", 800);
+        }
+      });
+    });
+  }
+
+  function bindOverlayControls() {
+    const inpFile = document.getElementById("inpOverlayFile");
+    const imgOverlay = document.getElementById("imgOverlay");
+    const rngOpacity = document.getElementById("valOverlayOpacity");
+    const rngScale = document.getElementById("valOverlayScale");
+    const rngX = document.getElementById("valOverlayX");
+    const rngY = document.getElementById("valOverlayY");
+
+    const lblOpacity = document.getElementById("lblOverlayOpacity");
+    const lblScale = document.getElementById("lblOverlayScale");
+    const lblX = document.getElementById("lblOverlayX");
+    const lblY = document.getElementById("lblOverlayY");
+
+    if (!imgOverlay) return;
+
+    if (inpFile) {
+      inpFile.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            imgOverlay.src = event.target.result;
+            imgOverlay.style.display = "block";
+            applyOverlayStyles();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    const applyOverlayStyles = () => {
+      const opacity = rngOpacity ? rngOpacity.value : 0.5;
+      const scale = rngScale ? rngScale.value : 1.0;
+      const x = rngX ? rngX.value : 0;
+      const y = rngY ? rngY.value : 0;
+
+      if (lblOpacity) lblOpacity.textContent = opacity;
+      if (lblScale) lblScale.textContent = Math.round(scale * 100) + "%";
+      if (lblX) lblX.textContent = x + "px";
+      if (lblY) lblY.textContent = y + "px";
+
+      imgOverlay.style.opacity = opacity;
+      imgOverlay.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    };
+
+    [rngOpacity, rngScale, rngX, rngY].forEach((el) => {
+      if (el) {
+        el.addEventListener("input", applyOverlayStyles);
+        el.addEventListener("change", applyOverlayStyles);
+      }
+    });
   }
 
   async function init() {
@@ -1128,10 +1441,18 @@
     bind();
     bindSideUi();
     syncBgShiftInputs();
+    bindClickToNavTargets();
+    bindOverlayControls();
     cloudReady = false;
     if (cloudConfigured()) await cloudLoad();
     cloudReady = true;
     if (!els.side?.value) setSide(DEFAULTS.side, { shouldSave: false });
+    
+    const selTarget = document.getElementById("selNavTarget");
+    if (selTarget) {
+      updateNavControlsForTarget(selTarget.value);
+    }
+
     rerollIfNeeded(true);
     renderAll();
     triggerWarningFlash();
