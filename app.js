@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.36";
+  const BUILD_VERSION = "t260630.37";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -460,6 +460,25 @@
     applyOverlayToDom();
 
     cardCustomStyles = state.cardCustomStyles || {};
+    // 기본 선/박스가 항상 보이도록 최소 기본값 보정
+    if (!cardCustomStyles["#profitDivider"] || typeof cardCustomStyles["#profitDivider"] !== "object") {
+      cardCustomStyles["#profitDivider"] = { x: 0, y: 0, size: 280, weight: 3, color: "#3b82f6", opacity: 1 };
+    } else {
+      const st = cardCustomStyles["#profitDivider"];
+      if (st.size == null || Number(st.size) < 120) st.size = 280;
+      if (st.weight == null || Number(st.weight) < 1) st.weight = 3;
+      if (st.opacity == null || Number(st.opacity) <= 0) st.opacity = 1;
+      if (!st.color) st.color = "#3b82f6";
+    }
+    if (!cardCustomStyles["#txtSideBox"] || typeof cardCustomStyles["#txtSideBox"] !== "object") {
+      cardCustomStyles["#txtSideBox"] = { x: 0, y: 0, size: 34, weight: 2, color: "#facc15", opacity: 1 };
+    } else {
+      const st = cardCustomStyles["#txtSideBox"];
+      if (st.size == null || Number(st.size) < 18) st.size = 34;
+      if (st.weight == null || Number(st.weight) < 1) st.weight = 2;
+      if (st.opacity == null || Number(st.opacity) <= 0) st.opacity = 1;
+      if (!st.color) st.color = "#facc15";
+    }
 
     generatedItems = [];
     previewIndex = -1;
@@ -1576,9 +1595,6 @@
             if (styleData.color) {
               const rgb = hexToRgb(styleData.color);
               if (rgb) parent.style.setProperty("--badge-box-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
-            }
-            if (styleData.x || styleData.y) {
-              parent.style.transform = `translate(${styleData.x || 0}px, ${styleData.y || 0}px)`;
             }
           }
         }
