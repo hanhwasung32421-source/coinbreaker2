@@ -201,7 +201,7 @@ button.secondary{ background:#0c1220; }
   content: "";
   position: absolute;
   inset: 0;
-  background-color: rgba(3, 7, 18, 0.9); /* dark:before:bg-gray-950/90 */
+  background-color: rgba(3, 7, 18, 0.78);
   z-index: 1;
 }
 
@@ -309,14 +309,18 @@ button.secondary{ background:#0c1220; }
 
 .dgb-profit-divider{
   display:block;
-  height: var(--profit-divider-thickness, 3px);
-  width: var(--profit-divider-width, 280px);
-  min-width: 120px;
-  background: rgba(59, 130, 246, var(--profit-divider-alpha, 1));
+  position: relative;
+  z-index: 12;
+  flex: 0 0 auto;
+  height: var(--profit-divider-thickness, 4px);
+  width: var(--profit-divider-width, 300px);
+  min-width: 160px;
+  background: rgba(56, 189, 248, var(--profit-divider-alpha, 1));
+  border: 1px solid rgba(125, 211, 252, 0.95);
   border-radius: 2px;
   margin: 10px auto 6px;
   transform: translate(var(--profit-divider-shift-x, 0px), var(--profit-divider-shift-y, 0px));
-  box-shadow: 0 0 8px rgba(59, 130, 246, calc(var(--profit-divider-alpha, 1) * 0.35));
+  box-shadow: 0 0 10px rgba(56, 189, 248, calc(var(--profit-divider-alpha, 1) * 0.45));
 }
 
 .dgb-grid {
@@ -386,8 +390,10 @@ button.secondary{ background:#0c1220; }
 
 /* 컨트롤 렌더링 화면: 배경은 원본 유지, 격자 오버레이만 제거 */
 .dgb-overlay{
-  display:none !important;
+  display:block !important;
+  background-color: rgba(34, 197, 94, 0.10);
   background-image:none !important;
+  opacity:1 !important;
 }
 
 .shift-stepper {
@@ -622,7 +628,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.37</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.38</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -965,6 +971,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.37"></script>
+    <script src="../app.js?v=t260630.38"></script>
   </body>
 </html>
