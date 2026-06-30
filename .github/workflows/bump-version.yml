@@ -23,7 +23,7 @@ jobs:
           SINCE_KST="$(TZ=Asia/Seoul date +'%Y-%m-%d 00:00:00 +0900')"
           COUNT=$(git log --since="$SINCE_KST" --grep="chore: bump build version" --invert-grep --oneline | wc -l)
           SEQ=$(printf "%02d" $COUNT)
-          BUILD="a${DATE_KST}${SEQ}"
+          BUILD="t${DATE_KST}${SEQ}"
           echo "Computed version: $BUILD"
           
           echo "{\"build\":\"$BUILD\"}" > "version.json"

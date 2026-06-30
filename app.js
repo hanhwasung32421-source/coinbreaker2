@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "a26063007";
+  const BUILD_VERSION = "t26063007";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -231,8 +231,7 @@
   function randomEntryFromBase(entryBaseText) {
     const baseInt = parseEntryToInt(entryBaseText);
     if (baseInt == null) return String(entryBaseText || "").trim();
-    const next = Math.max(0, baseInt + [-2, -1, 0, 1, 2][randInt(0, 4)]);
-    return trimTrailingZeroIn5dp(entryIntToText(next));
+    return trimTrailingZeroIn5dp(entryIntToText(baseInt));
   }
 
   function parseLeverage(text) {
@@ -497,9 +496,8 @@
     // DOM 배경은 zoom<1에서 가로가 줄어 "오른쪽이 비는" 문제가 생김.
     // 원본처럼 항상 가로는 꽉 차게 유지하고(>=100%), zoom은 확대(>=1)에서만 반영.
     const z = clamp(els.bgZoom?.value, 0.5, 2);
-    const sizeZoom = Math.max(1, z);
     els.cardRoot.style.backgroundRepeat = "repeat-y";
-    els.cardRoot.style.backgroundSize = `${(sizeZoom * 100).toFixed(3)}% auto`;
+    els.cardRoot.style.backgroundSize = `${(z * 100).toFixed(3)}% auto`;
     // C의 배경 X/Y는 "좌상단 기준(px)"으로 해석 (0,0이면 왼쪽 위에 맞춰짐)
     els.cardRoot.style.backgroundPosition = `${Math.round(bgShiftX)}px ${Math.round(bgShiftY)}px`;
   }
@@ -535,10 +533,7 @@
   }
 
   function renderCard(item) {
-    let percentText = Number(item.percent).toFixed(2);
-    if (percentText.includes(".")) {
-      percentText = percentText.replace(/0+$/, "").replace(/\.$/, "");
-    }
+    const percentText = Number(item.percent).toFixed(2);
     if (els.txtPercent) els.txtPercent.textContent = percentText;
     if (els.txtProfit) els.txtProfit.textContent = formatProfit(item.profit);
     if (els.txtSymbol) els.txtSymbol.textContent = String(els.symbol?.value || "").trim();
@@ -1025,8 +1020,8 @@
       renderAll();
       scheduleCloudSave();
     };
-    if (els.zoomIn) els.zoomIn.addEventListener("click", () => bumpZoom(+0.001));
-    if (els.zoomOut) els.zoomOut.addEventListener("click", () => bumpZoom(-0.001));
+    if (els.zoomIn) els.zoomIn.addEventListener("click", () => bumpZoom(+0.05));
+    if (els.zoomOut) els.zoomOut.addEventListener("click", () => bumpZoom(-0.05));
 
     const bumpBg = (key, delta) => {
       if (key === "x") bgShiftX = Math.round(bgShiftX) + delta;
