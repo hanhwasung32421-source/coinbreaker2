@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coin Breaker (Maker)</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
-    <!-- fallback 스타일 -->
-    <link rel="stylesheet" href="../style.css?v=t260630.32" />
+    <!-- fallback 스타일(메인 CSS 주입 성공 시 자동 비활성화) -->
+    <link id="fallbackCss" rel="stylesheet" href="../style.css?v=t260630.33" />
     <!-- 메인(index.html)과 동일한 렌더링 CSS를 그대로 주입 -->
     <script>
       (async () => {
@@ -19,6 +19,8 @@
             st.id = "mainInlineCss";
             st.textContent = m[1];
             document.head.appendChild(st);
+            const fb = document.getElementById("fallbackCss");
+            if (fb) fb.disabled = true;
           }
         } catch (e) {
           // ignore (fallback 스타일만 사용)
@@ -36,20 +38,8 @@
   </head>
   <body>
     <div class="topbar">
-      <div class="topbar-left">
-        Coin Breaker
-        <a
-          href="../control/"
-          style="margin-left:6px; font-size:12px; padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0c1220; color:rgba(231,238,252,.92); text-decoration:none;"
-          >컨트롤</a
-        >
-        <a
-          href="../maker/"
-          style="margin-left:6px; font-size:12px; padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0c1220; color:rgba(231,238,252,.92); text-decoration:none;"
-          >maker</a
-        >
-      </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.32</span></div>
+      <div class="topbar-left">Coin Breaker</div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.33</span></div>
     </div>
 
     <div class="app">
@@ -75,6 +65,7 @@
                     </div>
                     <div class="dgb-amt" id="txtProfit" data-nav-target="#txtProfit">10,229,614 원</div>
                   </div>
+                  <div id="profitDivider" class="dgb-profit-divider" data-nav-target="#profitDivider"></div>
 
                   <div class="dgb-separator"></div>
 
@@ -84,7 +75,7 @@
                       <div class="dgb-grid-value-wrap">
                         <span id="txtSymbol" data-nav-target="#txtSymbol">DOGE/USDT</span>
                         <span id="txtSide" class="dgb-side-badge SHORT" data-nav-target="#txtSide">
-                          <span class="dgb-side-box" aria-hidden="true"></span>
+                          <span id="txtSideBox" class="dgb-side-box" aria-hidden="true" data-nav-target="#txtSideBox"></span>
                           <span class="dgb-side-text">SHORT</span>
                         </span>
                       </div>
@@ -215,6 +206,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.32"></script>
+    <script src="../app.js?v=t260630.33"></script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.32";
+  const BUILD_VERSION = "t260630.33";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -1194,6 +1194,8 @@
     const clrPicker = document.getElementById("clrNavColor");
     const selFont = document.getElementById("selNavFont");
     const inpColorHex = document.getElementById("inpNavColorHex");
+    const rngNavOpacity = document.getElementById("rngNavOpacity");
+    const lblNavOpacity = document.getElementById("lblNavOpacity");
     const rngSideBadgeSize = document.getElementById("rngSideBadgeSize");
     const rngSideBadgeBorder = document.getElementById("rngSideBadgeBorder");
     const rngSideBadgeOpacity = document.getElementById("rngSideBadgeOpacity");
@@ -1214,12 +1216,17 @@
       });
     }
 
-    // LONG/SHORT 박스( #txtSide ) 전용
+    // 초기 표시를 위해 투명도 라벨 동기화
+    if (rngNavOpacity && lblNavOpacity) {
+      lblNavOpacity.textContent = String(Number(rngNavOpacity.value).toFixed(2));
+    }
+
+    // LONG/SHORT 박스( #txtSideBox ) 전용
     const applySideBadge = () => {
-      const st = ensureStyle("#txtSide");
-      if (rngSideBadgeSize) st.badgeSize = Number(rngSideBadgeSize.value);
-      if (rngSideBadgeBorder) st.badgeBorder = Number(rngSideBadgeBorder.value);
-      if (rngSideBadgeOpacity) st.badgeBoxAlpha = Number(rngSideBadgeOpacity.value);
+      const st = ensureStyle("#txtSideBox");
+      if (rngSideBadgeSize) st.size = Number(rngSideBadgeSize.value);
+      if (rngSideBadgeBorder) st.weight = Number(rngSideBadgeBorder.value);
+      if (rngSideBadgeOpacity) st.opacity = Number(rngSideBadgeOpacity.value);
       if (lblSideBadgeSize && rngSideBadgeSize) lblSideBadgeSize.textContent = `${Math.round(Number(rngSideBadgeSize.value))}px`;
       if (lblSideBadgeBorder && rngSideBadgeBorder) lblSideBadgeBorder.textContent = `${Math.round(Number(rngSideBadgeBorder.value))}px`;
       if (lblSideBadgeOpacity && rngSideBadgeOpacity) lblSideBadgeOpacity.textContent = String(Number(rngSideBadgeOpacity.value).toFixed(2));
@@ -1290,6 +1297,21 @@
       });
     }
 
+    if (rngNavOpacity) {
+      const onOpacity = () => {
+        const selector = selTarget.value;
+        if (!cardCustomStyles[selector]) {
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
+        }
+        cardCustomStyles[selector].opacity = clamp(Number(rngNavOpacity.value), 0, 1);
+        if (lblNavOpacity) lblNavOpacity.textContent = String(Number(rngNavOpacity.value).toFixed(2));
+        renderAll();
+        scheduleCloudSave();
+      };
+      rngNavOpacity.addEventListener("input", onOpacity);
+      rngNavOpacity.addEventListener("change", onOpacity);
+    }
+
     const btnBolder = document.getElementById("btnNavWeightBolder");
     if (btnBolder) {
       btnBolder.addEventListener("click", () => {
@@ -1297,7 +1319,12 @@
         if (!cardCustomStyles[selector]) {
           cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
         }
-        cardCustomStyles[selector].weight = "700";
+        if (selector === "#profitDivider" || selector === "#txtSideBox") {
+          const cur = cardCustomStyles[selector].weight != null ? Number(cardCustomStyles[selector].weight) : 2;
+          cardCustomStyles[selector].weight = Math.max(1, Math.min(12, Math.round(cur + 1)));
+        } else {
+          cardCustomStyles[selector].weight = "700";
+        }
         renderAll();
         scheduleCloudSave();
       });
@@ -1310,7 +1337,12 @@
         if (!cardCustomStyles[selector]) {
           cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
         }
-        cardCustomStyles[selector].weight = "400";
+        if (selector === "#profitDivider" || selector === "#txtSideBox") {
+          const cur = cardCustomStyles[selector].weight != null ? Number(cardCustomStyles[selector].weight) : 2;
+          cardCustomStyles[selector].weight = Math.max(1, Math.min(12, Math.round(cur - 1)));
+        } else {
+          cardCustomStyles[selector].weight = "400";
+        }
         renderAll();
         scheduleCloudSave();
       });
@@ -1328,6 +1360,11 @@
           if (selector === ".dgb-close-btn") {
             const r = el.getBoundingClientRect();
             curSize = Math.round(r.width || r.height || 32);
+          } else if (selector === "#profitDivider") {
+            curSize = Math.round(el.getBoundingClientRect().width || 220);
+          } else if (selector === "#txtSideBox") {
+            const parent = els.cardRoot.querySelector("#txtSide");
+            curSize = Math.round(parent ? parent.getBoundingClientRect().width || 24 : 24);
           } else {
             curSize = parseFloat(window.getComputedStyle(el).fontSize) || 16;
           }
@@ -1337,6 +1374,10 @@
       }
       if (selector === ".dgb-close-btn") {
         cardCustomStyles[selector].size = Math.max(18, Math.min(80, Math.round(curSize + delta)));
+      } else if (selector === "#profitDivider") {
+        cardCustomStyles[selector].size = Math.max(40, Math.min(420, Math.round(curSize + delta * 10)));
+      } else if (selector === "#txtSideBox") {
+        cardCustomStyles[selector].size = Math.max(14, Math.min(80, Math.round(curSize + delta)));
       } else {
         cardCustomStyles[selector].size = Math.max(8, Math.round(curSize + delta));
       }
@@ -1435,6 +1476,17 @@
       const el = els.cardRoot.querySelector(selector);
       if (el) {
         el.style.transform = `translate(${styleData.x || 0}px, ${styleData.y || 0}px)`;
+        if (selector === "#profitDivider") {
+          // 파란 구분선: size=길이(px), weight=굵기(px), opacity=투명도, color=색상
+          if (styleData.size != null && styleData.size !== "") el.style.width = `${Math.max(40, Math.round(Number(styleData.size) || 0))}px`;
+          else el.style.width = "";
+          if (styleData.weight != null && styleData.weight !== "") el.style.height = `${Math.max(1, Math.round(Number(styleData.weight) || 0))}px`;
+          else el.style.height = "";
+          if (styleData.opacity != null && styleData.opacity !== "") el.style.opacity = String(clamp(styleData.opacity, 0, 1));
+          else el.style.opacity = "";
+          if (styleData.color) el.style.backgroundColor = styleData.color;
+          else el.style.backgroundColor = "";
+        }
         if (selector === ".dgb-close-btn") {
           if (styleData.size) {
             const px = Math.max(18, Math.min(80, Math.round(Number(styleData.size) || 0)));
@@ -1474,14 +1526,31 @@
           el.style.opacity = "";
         }
 
-        // LONG/SHORT 뱃지 박스(크기/굵기/투명도)
+        // LONG/SHORT 뱃지 박스(크기/굵기/투명도/색상)
         if (selector === "#txtSide") {
           if (styleData.badgeSize != null && styleData.badgeSize !== "") el.style.setProperty("--badge-size", `${Math.round(Number(styleData.badgeSize) || 24)}px`);
           else el.style.removeProperty("--badge-size");
           if (styleData.badgeBorder != null && styleData.badgeBorder !== "") el.style.setProperty("--badge-border-width", `${Math.round(Number(styleData.badgeBorder) || 1)}px`);
           else el.style.removeProperty("--badge-border-width");
-          const boxAlpha = styleData.badgeBoxAlpha != null ? Number(styleData.badgeBoxAlpha) : (styleData.opacity != null ? Number(styleData.opacity) : 0.15);
-          el.style.setProperty("--badge-box-alpha", String(clamp(boxAlpha, 0, 1)));
+          const boxAlpha = styleData.badgeBoxAlpha != null ? Number(styleData.badgeBoxAlpha) : (styleData.opacity != null ? Number(styleData.opacity) : null);
+          if (boxAlpha != null) el.style.setProperty("--badge-box-alpha", String(clamp(boxAlpha, 0, 1)));
+          // 박스 색상은 txtSideBox에서 처리(역호환 목적)
+        }
+        if (selector === "#txtSideBox") {
+          const parent = els.cardRoot.querySelector("#txtSide");
+          if (parent) {
+            // size=박스 크기, weight=박스선 굵기, opacity=투명도(0~1), color=박스선 색상
+            if (styleData.size != null && styleData.size !== "") parent.style.setProperty("--badge-size", `${Math.round(Number(styleData.size) || 24)}px`);
+            if (styleData.weight != null && styleData.weight !== "") parent.style.setProperty("--badge-border-width", `${Math.round(Number(styleData.weight) || 1)}px`);
+            if (styleData.opacity != null && styleData.opacity !== "") parent.style.setProperty("--badge-box-alpha", String(clamp(styleData.opacity, 0, 1)));
+            if (styleData.color) {
+              const rgb = hexToRgb(styleData.color);
+              if (rgb) parent.style.setProperty("--badge-box-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+            }
+            if (styleData.x || styleData.y) {
+              parent.style.transform = `translate(${styleData.x || 0}px, ${styleData.y || 0}px)`;
+            }
+          }
         }
         if (styleData.text !== undefined && styleData.text !== null && styleData.text !== "") {
           if (selector === "#txtSide") {
@@ -1521,6 +1590,15 @@
       selFont.value = styleData.font || "inherit";
     }
 
+    // 공용 투명도 슬라이더
+    const rngOp = document.getElementById("rngNavOpacity");
+    const lblOp = document.getElementById("lblNavOpacity");
+    if (rngOp) {
+      const v = styleData.opacity != null ? Number(styleData.opacity) : (el ? parseFloat(getComputedStyle(el).opacity) || 1 : 1);
+      rngOp.value = String(Number.isFinite(v) ? v : 1);
+      if (lblOp) lblOp.textContent = String(Number(rngOp.value).toFixed(2));
+    }
+
     // LONG/SHORT 박스 전용 컨트롤
     const rngBadgeSize = document.getElementById("rngSideBadgeSize");
     const rngBadgeBorder = document.getElementById("rngSideBadgeBorder");
@@ -1529,7 +1607,7 @@
     const lblBadgeBorder = document.getElementById("lblSideBadgeBorder");
     const lblBadgeOpacity = document.getElementById("lblSideBadgeOpacity");
 
-    const enabled = selector === "#txtSide";
+    const enabled = selector === "#txtSideBox" || selector === "#txtSide";
     [rngBadgeSize, rngBadgeBorder, rngBadgeOpacity].forEach((x) => {
       if (!x) return;
       x.disabled = !enabled;
@@ -1537,23 +1615,38 @@
     });
 
     if (rngBadgeSize) {
-      const v = styleData.badgeSize != null ? Number(styleData.badgeSize) : (el ? parseFloat(getComputedStyle(el).getPropertyValue("--badge-size")) || 24 : 24);
+      const v =
+        selector === "#txtSideBox" && styleData.size != null
+          ? Number(styleData.size)
+          : (styleData.badgeSize != null ? Number(styleData.badgeSize) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-size")) || 24 : 24));
       rngBadgeSize.value = String(Number.isFinite(v) ? v : 24);
       if (lblBadgeSize) lblBadgeSize.textContent = `${Math.round(Number(rngBadgeSize.value))}px`;
     }
     if (rngBadgeBorder) {
-      const v = styleData.badgeBorder != null ? Number(styleData.badgeBorder) : (el ? parseFloat(getComputedStyle(el).getPropertyValue("--badge-border-width")) || 1 : 1);
+      const v =
+        selector === "#txtSideBox" && styleData.weight != null
+          ? Number(styleData.weight)
+          : (styleData.badgeBorder != null ? Number(styleData.badgeBorder) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-border-width")) || 1 : 1));
       rngBadgeBorder.value = String(Number.isFinite(v) ? v : 1);
       if (lblBadgeBorder) lblBadgeBorder.textContent = `${Math.round(Number(rngBadgeBorder.value))}px`;
     }
     if (rngBadgeOpacity) {
       const v =
-        styleData.badgeBoxAlpha != null
-          ? Number(styleData.badgeBoxAlpha)
-          : (styleData.opacity != null ? Number(styleData.opacity) : (el ? parseFloat(getComputedStyle(el).getPropertyValue("--badge-box-alpha")) || 0.15 : 0.15));
+        selector === "#txtSideBox" && styleData.opacity != null
+          ? Number(styleData.opacity)
+          : (styleData.badgeBoxAlpha != null
+              ? Number(styleData.badgeBoxAlpha)
+              : (styleData.opacity != null ? Number(styleData.opacity) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-alpha")) || 0.15 : 0.15)));
       rngBadgeOpacity.value = String(Number.isFinite(v) ? v : 0.15);
       if (lblBadgeOpacity) lblBadgeOpacity.textContent = String(Number(rngBadgeOpacity.value).toFixed(2));
     }
+  }
+
+  function hexToRgb(hex) {
+    const m = String(hex || "").trim().match(/^#?([0-9a-f]{6})$/i);
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
   }
 
   function rgbToHex(rgb) {
