@@ -310,11 +310,11 @@ button.secondary{ background:#0c1220; }
 .dgb-profit-divider{
   height: var(--profit-divider-thickness, 3px);
   width: var(--profit-divider-width, 280px);
-  background: rgba(59, 130, 246, var(--profit-divider-alpha, 0.7));
+  background: rgba(250, 204, 21, var(--profit-divider-alpha, 1));
   border-radius: 2px;
   margin: 10px auto 6px;
   transform: translate(var(--profit-divider-shift-x, 0px), var(--profit-divider-shift-y, 0px));
-  box-shadow: 0 0 8px rgba(59, 130, 246, calc(var(--profit-divider-alpha, 0.7) * 0.25));
+  box-shadow: 0 0 8px rgba(250, 204, 21, calc(var(--profit-divider-alpha, 1) * 0.35));
 }
 
 .dgb-grid {
@@ -372,15 +372,20 @@ button.secondary{ background:#0c1220; }
   border: var(--badge-border-width, 2px) solid transparent;
   opacity: 1;
   pointer-events:none;
-  border-color: rgba(var(--badge-box-rgb, 59, 130, 246), var(--badge-box-alpha, 0.7));
-  box-shadow: 0 0 0 1px rgba(var(--badge-box-rgb, 59, 130, 246), calc(var(--badge-box-alpha, 0.7) * 0.3));
+  border-color: rgba(var(--badge-box-rgb, 250, 204, 21), var(--badge-box-alpha, 1));
+  box-shadow: 0 0 0 1px rgba(var(--badge-box-rgb, 250, 204, 21), calc(var(--badge-box-alpha, 1) * 0.35));
 }
 .dgb-side-badge .dgb-side-text{
   position:relative;
   z-index:1;
 }
-.dgb-side-badge.LONG { color: #22C55E; --badge-box-rgb: 59, 130, 246; }
-.dgb-side-badge.SHORT { color: #EF4444; --badge-box-rgb: 59, 130, 246; }
+.dgb-side-badge.LONG { color: #22C55E; --badge-box-rgb: 250, 204, 21; }
+.dgb-side-badge.SHORT { color: #EF4444; --badge-box-rgb: 250, 204, 21; }
+
+/* 컨트롤 렌더링 화면에서는 격자 패턴 제거 */
+.dg-body{
+  background-image: none !important;
+}
 
 .shift-stepper {
   display: flex;
@@ -610,7 +615,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.34</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.35</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -871,8 +876,8 @@ button.secondary{ background:#0c1220; }
                   <input type="range" id="rngSideBadgeBorder" min="1" max="8" step="1" value="2" style="width: 100%; accent-color: var(--accent);" />
                 </div>
                 <div class="control-row" style="display:flex; flex-direction: column; gap: 6px;">
-                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">투명도(박스): <span id="lblSideBadgeOpacity">0.70</span></span>
-                  <input type="range" id="rngSideBadgeOpacity" min="0.05" max="1" step="0.05" value="0.70" style="width: 100%; accent-color: var(--accent);" />
+                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">투명도(박스): <span id="lblSideBadgeOpacity">1.00</span></span>
+                  <input type="range" id="rngSideBadgeOpacity" min="0.05" max="1" step="0.05" value="1.00" style="width: 100%; accent-color: var(--accent);" />
                 </div>
               </div>
             </div>
@@ -953,6 +958,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.34"></script>
+    <script src="../app.js?v=t260630.35"></script>
   </body>
 </html>

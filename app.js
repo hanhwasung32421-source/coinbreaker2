@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.34";
+  const BUILD_VERSION = "t260630.35";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -1638,7 +1638,7 @@
         styleData.opacity != null
           ? Number(styleData.opacity)
           : (selector === "#txtSideBox" && els.cardRoot.querySelector("#txtSide")
-              ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-alpha")) || 0.7
+              ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-alpha")) || 1
               : (el ? parseFloat(getComputedStyle(el).opacity) || 1 : 1));
       rngOp.value = String(Number.isFinite(v) ? v : 1);
       if (lblOp) lblOp.textContent = String(Number(rngOp.value).toFixed(2));
@@ -1681,8 +1681,8 @@
           ? Number(styleData.opacity)
           : (styleData.badgeBoxAlpha != null
               ? Number(styleData.badgeBoxAlpha)
-              : (styleData.opacity != null ? Number(styleData.opacity) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-alpha")) || 0.7 : 0.7)));
-      rngBadgeOpacity.value = String(Number.isFinite(v) ? v : 0.7);
+              : (styleData.opacity != null ? Number(styleData.opacity) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-alpha")) || 1 : 1)));
+      rngBadgeOpacity.value = String(Number.isFinite(v) ? v : 1);
       if (lblBadgeOpacity) lblBadgeOpacity.textContent = String(Number(rngBadgeOpacity.value).toFixed(2));
     }
   }
