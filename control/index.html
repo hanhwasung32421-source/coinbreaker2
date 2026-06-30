@@ -315,12 +315,12 @@ button.secondary{ background:#0c1220; }
   height: var(--profit-divider-thickness, 4px);
   width: var(--profit-divider-width, 300px);
   min-width: 160px;
-  background: rgba(56, 189, 248, var(--profit-divider-alpha, 1));
-  border: 1px solid rgba(125, 211, 252, 0.95);
+  background: rgba(var(--profit-divider-rgb, 56, 189, 248), var(--profit-divider-alpha, 1));
+  border: 1px solid rgba(var(--profit-divider-rgb, 56, 189, 248), 0.95);
   border-radius: 2px;
   margin: 10px auto 6px;
   transform: translate(var(--profit-divider-shift-x, 0px), var(--profit-divider-shift-y, 0px));
-  box-shadow: 0 0 10px rgba(56, 189, 248, calc(var(--profit-divider-alpha, 1) * 0.45));
+  box-shadow: 0 0 10px rgba(var(--profit-divider-rgb, 56, 189, 248), calc(var(--profit-divider-alpha, 1) * 0.45));
 }
 
 .dgb-grid {
@@ -629,7 +629,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.42</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.43</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -986,6 +986,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.42"></script>
+    <script src="../app.js?v=t260630.43"></script>
   </body>
 </html>
