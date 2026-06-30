@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.43";
+  const BUILD_VERSION = "t260630.44";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -88,6 +88,7 @@
 
   let cloudReady = false;
   let cloudSaveTimer = null;
+  let cloudSavePending = false;
   let generatedItems = [];
   let previewIndex = -1;
   let samplePercent = null;
@@ -513,28 +514,39 @@
     }
   }
 
-  async function cloudSaveNow() {
+  async function cloudSaveNow({ silent = false, keepalive = false } = {}) {
     if (!cloudConfigured()) return;
     try {
       const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?on_conflict=id`;
       const body = [{ id: SUPABASE_ROW_ID, data: collectState() }];
+      cloudSavePending = false;
       const res = await fetch(url, {
         method: "POST",
         headers: { ...sbHeaders(), Prefer: "resolution=merge-duplicates" },
         body: JSON.stringify(body),
+        keepalive,
       });
       if (!res.ok) throw new Error(`save failed: ${res.status}`);
-      showToastFor("클라우드 저장됨", 1000);
+      if (!silent) showToastFor("클라우드 저장됨", 1000);
     } catch (e) {
       console.error(e);
-      showToastFor("클라우드 저장 실패", 1500);
+      cloudSavePending = true;
+      if (!silent) showToastFor("클라우드 저장 실패", 1500);
     }
   }
 
   function scheduleCloudSave() {
     if (!cloudReady || !cloudConfigured()) return;
     clearTimeout(cloudSaveTimer);
-    cloudSaveTimer = setTimeout(() => cloudSaveNow(), 1200);
+    cloudSavePending = true;
+    cloudSaveTimer = setTimeout(() => cloudSaveNow({ silent: true }), 1200);
+  }
+
+  function flushCloudSaveOnLeave() {
+    if (!cloudReady || !cloudConfigured() || !cloudSavePending) return;
+    clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = null;
+    void cloudSaveNow({ silent: true, keepalive: true });
   }
 
   function syncBgShiftInputs() {
@@ -1044,6 +1056,12 @@
   }
 
   function bind() {
+    window.addEventListener("pagehide", flushCloudSaveOnLeave);
+    window.addEventListener("beforeunload", flushCloudSaveOnLeave);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flushCloudSaveOnLeave();
+    });
+
     const reRender = () => {
       renderAll();
       scheduleCloudSave();
