@@ -327,19 +327,21 @@ button.secondary{ background:#0c1220; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--badge-box-width, 34px);
-  height: var(--badge-box-height, 46px);
   border-radius: 8px;
   line-height: 1;
 }
 .dgb-side-badge .dgb-side-box {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 50%;
+  width: var(--badge-box-width, 34px);
+  height: var(--badge-box-height, 46px);
   border-radius: 8px;
   border: var(--badge-border-width, 2px) solid transparent;
   pointer-events: none;
   border-color: rgba(var(--badge-box-rgb, 250, 204, 21), var(--badge-box-alpha, 1));
   box-shadow: 0 0 0 1px rgba(var(--badge-box-rgb, 250, 204, 21), calc(var(--badge-box-alpha, 1) * 0.35));
+  transform: translate(-50%, -50%);
 }
 .dgb-side-badge .dgb-side-text {
   position: relative;

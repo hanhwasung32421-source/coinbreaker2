@@ -343,19 +343,20 @@ button.secondary{ background:#0c1220; }
   justify-content: center;
   align-items: center;
   border-radius: 8px;
-  width: var(--badge-box-width, 34px);
-  height: var(--badge-box-height, 46px);
   line-height: 1;
-  transform: translate(var(--badge-shift-x, 0px), var(--badge-shift-y, 0px));
 }
 .dgb-side-badge .dgb-side-box{
   position:absolute;
-  inset:0;
+  left:50%;
+  top:50%;
+  width: var(--badge-box-width, 34px);
+  height: var(--badge-box-height, 46px);
   border-radius:8px;
   border: var(--badge-border-width, 2px) solid transparent;
   pointer-events:none;
   border-color: rgba(var(--badge-box-rgb, 250, 204, 21), var(--badge-box-alpha, 1));
   box-shadow: 0 0 0 1px rgba(var(--badge-box-rgb, 250, 204, 21), calc(var(--badge-box-alpha, 1) * 0.35));
+  transform: translate(-50%, -50%);
 }
 .dgb-side-badge .dgb-side-text{
   position:relative;
@@ -586,7 +587,7 @@ button.secondary{ background:#0c1220; }
   <body>
     <div class="topbar">
       <div class="topbar-left">Coin Breaker</div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.38</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.39</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -854,6 +855,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.38"></script>
+    <script src="../app.js?v=t260630.39"></script>
   </body>
 </html>

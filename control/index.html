@@ -366,20 +366,21 @@ button.secondary{ background:#0c1220; }
   justify-content: center;
   align-items: center;
   border-radius: 8px;
-  width: var(--badge-box-width, 34px);
-  height: var(--badge-box-height, 46px);
   line-height: 1;
-  transform: translate(var(--badge-shift-x, 0px), var(--badge-shift-y, 0px));
 }
 .dgb-side-badge .dgb-side-box{
   position:absolute;
-  inset:0;
+  left:50%;
+  top:50%;
+  width: var(--badge-box-width, 34px);
+  height: var(--badge-box-height, 46px);
   border-radius:8px;
   border: var(--badge-border-width, 2px) solid transparent;
   opacity: 1;
   pointer-events:none;
   border-color: rgba(var(--badge-box-rgb, 250, 204, 21), var(--badge-box-alpha, 1));
   box-shadow: 0 0 0 1px rgba(var(--badge-box-rgb, 250, 204, 21), calc(var(--badge-box-alpha, 1) * 0.35));
+  transform: translate(-50%, -50%);
 }
 .dgb-side-badge .dgb-side-text{
   position:relative;
@@ -628,7 +629,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.38</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.39</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -881,8 +882,12 @@ button.secondary{ background:#0c1220; }
               <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.06);">
                 <div style="font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px;">롱/숏 박스 세부 조정</div>
                 <div class="control-row" style="display:flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
-                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">박스 크기: <span id="lblSideBadgeSize">34px</span></span>
+                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">가로 크기: <span id="lblSideBadgeSize">34px</span></span>
                   <input type="range" id="rngSideBadgeSize" min="14" max="80" step="1" value="34" style="width: 100%; accent-color: var(--accent);" />
+                </div>
+                <div class="control-row" style="display:flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">세로 크기: <span id="lblSideBadgeHeight">46px</span></span>
+                  <input type="range" id="rngSideBadgeHeight" min="14" max="100" step="1" value="46" style="width: 100%; accent-color: var(--accent);" />
                 </div>
                 <div class="control-row" style="display:flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
                   <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">테두리 굵기: <span id="lblSideBadgeBorder">2px</span></span>
@@ -971,6 +976,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.38"></script>
+    <script src="../app.js?v=t260630.39"></script>
   </body>
 </html>
