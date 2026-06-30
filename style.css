@@ -327,7 +327,7 @@ button.secondary{ background:#0c1220; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 2px;
   line-height: 1;
 }
 .dgb-side-badge .dgb-side-box {
@@ -336,7 +336,7 @@ button.secondary{ background:#0c1220; }
   top: 50%;
   width: var(--badge-box-width, 34px);
   height: var(--badge-box-height, 46px);
-  border-radius: 8px;
+  border-radius: 2px;
   border: var(--badge-border-width, 2px) solid transparent;
   pointer-events: none;
   border-color: rgba(var(--badge-box-rgb, 250, 204, 21), var(--badge-box-alpha, 1));
