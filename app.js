@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.33";
+  const BUILD_VERSION = "t260630.34";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -1391,6 +1391,27 @@
     const btnSizeDown = document.getElementById("btnNavSizeDown");
     if (btnSizeDown) btnSizeDown.addEventListener("click", () => adjustSize(-1));
 
+    const adjustSpacing = (delta) => {
+      const selector = selTarget.value;
+      if (!cardCustomStyles[selector]) {
+        cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null };
+      }
+      const el = els.cardRoot.querySelector(selector);
+      const cur =
+        cardCustomStyles[selector].tracking != null
+          ? Number(cardCustomStyles[selector].tracking)
+          : (el ? parseFloat(window.getComputedStyle(el).letterSpacing) || 0 : 0);
+      cardCustomStyles[selector].tracking = Math.max(-2, Math.min(20, Number((cur + delta).toFixed(1))));
+      renderAll();
+      scheduleCloudSave();
+    };
+
+    const btnSpacingUp = document.getElementById("btnNavSpacingUp");
+    if (btnSpacingUp) btnSpacingUp.addEventListener("click", () => adjustSpacing(0.5));
+
+    const btnSpacingDown = document.getElementById("btnNavSpacingDown");
+    if (btnSpacingDown) btnSpacingDown.addEventListener("click", () => adjustSpacing(-0.5));
+
     const adjustPos = (dx, dy) => {
       const selector = selTarget.value;
       if (!cardCustomStyles[selector]) {
@@ -1518,6 +1539,8 @@
         else el.style.color = "";
         if (styleData.font && styleData.font !== "inherit") el.style.fontFamily = styleData.font;
         else el.style.fontFamily = "";
+        if (styleData.tracking != null && styleData.tracking !== "") el.style.letterSpacing = `${Number(styleData.tracking)}px`;
+        else el.style.letterSpacing = "";
         if (selector !== "#txtSide") {
           if (styleData.opacity != null && styleData.opacity !== "") el.style.opacity = String(styleData.opacity);
           else el.style.opacity = "";
@@ -1540,8 +1563,12 @@
           const parent = els.cardRoot.querySelector("#txtSide");
           if (parent) {
             // size=박스 크기, weight=박스선 굵기, opacity=투명도(0~1), color=박스선 색상
-            if (styleData.size != null && styleData.size !== "") parent.style.setProperty("--badge-size", `${Math.round(Number(styleData.size) || 24)}px`);
-            if (styleData.weight != null && styleData.weight !== "") parent.style.setProperty("--badge-border-width", `${Math.round(Number(styleData.weight) || 1)}px`);
+            if (styleData.size != null && styleData.size !== "") {
+              const base = Math.max(18, Math.round(Number(styleData.size) || 34));
+              parent.style.setProperty("--badge-box-width", `${base}px`);
+              parent.style.setProperty("--badge-box-height", `${Math.round(base * 1.35)}px`);
+            }
+            if (styleData.weight != null && styleData.weight !== "") parent.style.setProperty("--badge-border-width", `${Math.round(Number(styleData.weight) || 2)}px`);
             if (styleData.opacity != null && styleData.opacity !== "") parent.style.setProperty("--badge-box-alpha", String(clamp(styleData.opacity, 0, 1)));
             if (styleData.color) {
               const rgb = hexToRgb(styleData.color);
@@ -1576,6 +1603,11 @@
     if (clrPicker) {
       if (styleData.color) {
         clrPicker.value = styleData.color;
+      } else if (selector === "#txtSideBox" && els.cardRoot.querySelector("#txtSide")) {
+        const bc = getComputedStyle(els.cardRoot.querySelector("#txtSide").querySelector(".dgb-side-box")).borderColor;
+        clrPicker.value = rgbToHex(bc) || "#3b82f6";
+      } else if (selector === "#profitDivider" && el) {
+        clrPicker.value = rgbToHex(window.getComputedStyle(el).backgroundColor) || "#3b82f6";
       } else if (el) {
         clrPicker.value = rgbToHex(window.getComputedStyle(el).color) || "#ffffff";
       } else {
@@ -1583,7 +1615,15 @@
       }
     }
     if (inpColorHex) {
-      inpColorHex.value = styleData.color ? String(styleData.color) : (el ? (rgbToHex(window.getComputedStyle(el).color) || "#ffffff") : "#ffffff");
+      if (styleData.color) {
+        inpColorHex.value = String(styleData.color);
+      } else if (selector === "#txtSideBox" && els.cardRoot.querySelector("#txtSide")) {
+        inpColorHex.value = rgbToHex(getComputedStyle(els.cardRoot.querySelector("#txtSide").querySelector(".dgb-side-box")).borderColor) || "#3b82f6";
+      } else if (selector === "#profitDivider" && el) {
+        inpColorHex.value = rgbToHex(window.getComputedStyle(el).backgroundColor) || "#3b82f6";
+      } else {
+        inpColorHex.value = el ? (rgbToHex(window.getComputedStyle(el).color) || "#ffffff") : "#ffffff";
+      }
     }
     const selFont = document.getElementById("selNavFont");
     if (selFont) {
@@ -1594,7 +1634,12 @@
     const rngOp = document.getElementById("rngNavOpacity");
     const lblOp = document.getElementById("lblNavOpacity");
     if (rngOp) {
-      const v = styleData.opacity != null ? Number(styleData.opacity) : (el ? parseFloat(getComputedStyle(el).opacity) || 1 : 1);
+      const v =
+        styleData.opacity != null
+          ? Number(styleData.opacity)
+          : (selector === "#txtSideBox" && els.cardRoot.querySelector("#txtSide")
+              ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-alpha")) || 0.7
+              : (el ? parseFloat(getComputedStyle(el).opacity) || 1 : 1));
       rngOp.value = String(Number.isFinite(v) ? v : 1);
       if (lblOp) lblOp.textContent = String(Number(rngOp.value).toFixed(2));
     }
@@ -1618,8 +1663,8 @@
       const v =
         selector === "#txtSideBox" && styleData.size != null
           ? Number(styleData.size)
-          : (styleData.badgeSize != null ? Number(styleData.badgeSize) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-size")) || 24 : 24));
-      rngBadgeSize.value = String(Number.isFinite(v) ? v : 24);
+          : (styleData.badgeSize != null ? Number(styleData.badgeSize) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-width")) || 34 : 34));
+      rngBadgeSize.value = String(Number.isFinite(v) ? v : 34);
       if (lblBadgeSize) lblBadgeSize.textContent = `${Math.round(Number(rngBadgeSize.value))}px`;
     }
     if (rngBadgeBorder) {
@@ -1627,7 +1672,7 @@
         selector === "#txtSideBox" && styleData.weight != null
           ? Number(styleData.weight)
           : (styleData.badgeBorder != null ? Number(styleData.badgeBorder) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-border-width")) || 1 : 1));
-      rngBadgeBorder.value = String(Number.isFinite(v) ? v : 1);
+      rngBadgeBorder.value = String(Number.isFinite(v) ? v : 2);
       if (lblBadgeBorder) lblBadgeBorder.textContent = `${Math.round(Number(rngBadgeBorder.value))}px`;
     }
     if (rngBadgeOpacity) {
@@ -1636,8 +1681,8 @@
           ? Number(styleData.opacity)
           : (styleData.badgeBoxAlpha != null
               ? Number(styleData.badgeBoxAlpha)
-              : (styleData.opacity != null ? Number(styleData.opacity) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-alpha")) || 0.15 : 0.15)));
-      rngBadgeOpacity.value = String(Number.isFinite(v) ? v : 0.15);
+              : (styleData.opacity != null ? Number(styleData.opacity) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-alpha")) || 0.7 : 0.7)));
+      rngBadgeOpacity.value = String(Number.isFinite(v) ? v : 0.7);
       if (lblBadgeOpacity) lblBadgeOpacity.textContent = String(Number(rngBadgeOpacity.value).toFixed(2));
     }
   }

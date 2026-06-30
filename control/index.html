@@ -308,12 +308,13 @@ button.secondary{ background:#0c1220; }
 }
 
 .dgb-profit-divider{
-  height: var(--profit-divider-thickness, 2px);
-  width: var(--profit-divider-width, 220px);
-  background: rgba(56, 189, 248, var(--profit-divider-alpha, 0.35));
+  height: var(--profit-divider-thickness, 3px);
+  width: var(--profit-divider-width, 280px);
+  background: rgba(59, 130, 246, var(--profit-divider-alpha, 0.7));
   border-radius: 2px;
   margin: 10px auto 6px;
   transform: translate(var(--profit-divider-shift-x, 0px), var(--profit-divider-shift-y, 0px));
+  box-shadow: 0 0 8px rgba(59, 130, 246, calc(var(--profit-divider-alpha, 0.7) * 0.25));
 }
 
 .dgb-grid {
@@ -358,27 +359,28 @@ button.secondary{ background:#0c1220; }
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  border-radius: 4px;
-  width: var(--badge-size, 24px);
-  height: var(--badge-size, 24px);
+  border-radius: 8px;
+  width: var(--badge-box-width, 34px);
+  height: var(--badge-box-height, 46px);
   line-height: 1;
   transform: translate(var(--badge-shift-x, 0px), var(--badge-shift-y, 0px));
 }
 .dgb-side-badge .dgb-side-box{
   position:absolute;
   inset:0;
-  border-radius:4px;
-  border: var(--badge-border-width, 1px) solid transparent;
+  border-radius:8px;
+  border: var(--badge-border-width, 2px) solid transparent;
   opacity: 1;
   pointer-events:none;
-  border-color: rgba(var(--badge-box-rgb, 56, 189, 248), var(--badge-box-alpha, 0.15));
+  border-color: rgba(var(--badge-box-rgb, 59, 130, 246), var(--badge-box-alpha, 0.7));
+  box-shadow: 0 0 0 1px rgba(var(--badge-box-rgb, 59, 130, 246), calc(var(--badge-box-alpha, 0.7) * 0.3));
 }
 .dgb-side-badge .dgb-side-text{
   position:relative;
   z-index:1;
 }
-.dgb-side-badge.LONG { color: #22C55E; --badge-box-rgb: 34, 197, 94; }
-.dgb-side-badge.SHORT { color: #EF4444; --badge-box-rgb: 239, 68, 68; }
+.dgb-side-badge.LONG { color: #22C55E; --badge-box-rgb: 59, 130, 246; }
+.dgb-side-badge.SHORT { color: #EF4444; --badge-box-rgb: 59, 130, 246; }
 
 .shift-stepper {
   display: flex;
@@ -608,7 +610,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.33</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.34</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -861,16 +863,16 @@ button.secondary{ background:#0c1220; }
               <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.06);">
                 <div style="font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px;">롱/숏 박스 세부 조정</div>
                 <div class="control-row" style="display:flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
-                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">박스 크기: <span id="lblSideBadgeSize">24px</span></span>
-                  <input type="range" id="rngSideBadgeSize" min="14" max="60" step="1" value="24" style="width: 100%; accent-color: var(--accent);" />
+                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">박스 크기: <span id="lblSideBadgeSize">34px</span></span>
+                  <input type="range" id="rngSideBadgeSize" min="14" max="80" step="1" value="34" style="width: 100%; accent-color: var(--accent);" />
                 </div>
                 <div class="control-row" style="display:flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
-                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">테두리 굵기: <span id="lblSideBadgeBorder">1px</span></span>
-                  <input type="range" id="rngSideBadgeBorder" min="0" max="6" step="1" value="1" style="width: 100%; accent-color: var(--accent);" />
+                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">테두리 굵기: <span id="lblSideBadgeBorder">2px</span></span>
+                  <input type="range" id="rngSideBadgeBorder" min="1" max="8" step="1" value="2" style="width: 100%; accent-color: var(--accent);" />
                 </div>
                 <div class="control-row" style="display:flex; flex-direction: column; gap: 6px;">
-                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">투명도(박스): <span id="lblSideBadgeOpacity">0.15</span></span>
-                  <input type="range" id="rngSideBadgeOpacity" min="0.05" max="1" step="0.05" value="0.15" style="width: 100%; accent-color: var(--accent);" />
+                  <span class="control-label" style="display:flex; justify-content: space-between; font-size: 12px; color: var(--muted);">투명도(박스): <span id="lblSideBadgeOpacity">0.70</span></span>
+                  <input type="range" id="rngSideBadgeOpacity" min="0.05" max="1" step="0.05" value="0.70" style="width: 100%; accent-color: var(--accent);" />
                 </div>
               </div>
             </div>
@@ -899,6 +901,14 @@ button.secondary{ background:#0c1220; }
                 <div class="btn-group">
                   <button type="button" id="btnNavSizeDown" class="secondary">크기 -</button>
                   <button type="button" id="btnNavSizeUp" class="secondary">크기 +</button>
+                </div>
+              </div>
+
+              <div class="control-section">
+                <span class="section-label">문구 간격</span>
+                <div class="btn-group">
+                  <button type="button" id="btnNavSpacingDown" class="secondary">간격 -</button>
+                  <button type="button" id="btnNavSpacingUp" class="secondary">간격 +</button>
                 </div>
               </div>
 
@@ -943,6 +953,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.33"></script>
+    <script src="../app.js?v=t260630.34"></script>
   </body>
 </html>
