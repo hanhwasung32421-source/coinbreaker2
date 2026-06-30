@@ -589,7 +589,7 @@ button.secondary{ background:#0c1220; }
           >컨트롤</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.26</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.27</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -607,8 +607,9 @@ button.secondary{ background:#0c1220; }
                     <h2 class="dgb-title" data-nav-target=".dgb-title">futuresusdt</h2>
                   </div>
                   <div class="dgb-values">
-                    <div class="dgb-pct" data-nav-target="#txtPercent">
-                      <span id="txtPercent">19.75</span> %
+                    <div class="dgb-pct">
+                      <span id="txtPercent" data-nav-target="#txtPercent">19.75</span>
+                      <span id="txtPercentSign" data-nav-target="#txtPercentSign">%</span>
                     </div>
                     <div class="dgb-amt" id="txtProfit" data-nav-target="#txtProfit">10,229,614 원</div>
                   </div>
@@ -777,17 +778,26 @@ button.secondary{ background:#0c1220; }
               <span class="control-label" style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">투명도: <span id="lblOverlayOpacity">0.5</span></span>
               <input type="range" id="valOverlayOpacity" min="0" max="1" step="0.05" value="0.5" style="width: 100%; accent-color: var(--accent);" />
             </div>
-            <div class="control-row" style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="control-row" style="display: flex; flex-direction: column; gap: 8px;">
               <span class="control-label" style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">크기(배율): <span id="lblOverlayScale">100%</span></span>
-              <input type="range" id="valOverlayScale" min="0.2" max="3" step="0.02" value="1.0" style="width: 100%; accent-color: var(--accent);" />
+              <div class="btn-group">
+                <button type="button" id="btnOverlayScaleDown" class="secondary">크기 -</button>
+                <button type="button" id="btnOverlayScaleUp" class="secondary">크기 +</button>
+              </div>
             </div>
-            <div class="control-row" style="display: flex; flex-direction: column; gap: 6px;">
-              <span class="control-label" style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">가로 위치 (X): <span id="lblOverlayX">0px</span></span>
-              <input type="range" id="valOverlayX" min="-300" max="300" step="1" value="0" style="width: 100%; accent-color: var(--accent);" />
-            </div>
-            <div class="control-row" style="display: flex; flex-direction: column; gap: 6px;">
-              <span class="control-label" style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">세로 위치 (Y): <span id="lblOverlayY">0px</span></span>
-              <input type="range" id="valOverlayY" min="-300" max="300" step="1" value="0" style="width: 100%; accent-color: var(--accent);" />
+            <div class="control-row" style="display: flex; flex-direction: column; gap: 8px;">
+              <span class="control-label" style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">위치: <span><span id="lblOverlayX">0px</span> / <span id="lblOverlayY">0px</span></span></span>
+              <div class="nav-pad" aria-label="오버레이 위치 이동">
+                <div class="spacer"></div>
+                <button type="button" id="btnOverlayUp" class="secondary">▲</button>
+                <div class="spacer"></div>
+                <button type="button" id="btnOverlayLeft" class="secondary">◀</button>
+                <button type="button" id="btnOverlayReset" class="secondary">↺</button>
+                <button type="button" id="btnOverlayRight" class="secondary">▶</button>
+                <div class="spacer"></div>
+                <button type="button" id="btnOverlayDown" class="secondary">▼</button>
+                <div class="spacer"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -798,7 +808,8 @@ button.secondary{ background:#0c1220; }
               <label class="nav-select-row">조절 대상 선택
                 <select id="selNavTarget" class="nav-select">
                   <option value=".dgb-title">로고 (futuresusdt)</option>
-                  <option value="#txtPercent">수익률 (%)</option>
+                  <option value="#txtPercent">수익률 숫자</option>
+                  <option value="#txtPercentSign">% 기호</option>
                   <option value="#txtProfit">수익금 (원)</option>
                   <option value=".dgb-grid-item:nth-child(1) .dgb-grid-label">코인 라벨</option>
                   <option value="#txtSymbol">코인명 (DOGEUSDT)</option>
@@ -894,6 +905,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.26"></script>
+    <script src="../app.js?v=t260630.27"></script>
   </body>
 </html>

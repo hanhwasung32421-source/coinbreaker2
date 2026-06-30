@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coin Breaker (New)</title>
-    <link rel="stylesheet" href="../style.css?v=t260630.26" />
+    <link rel="stylesheet" href="../style.css?v=t260630.27" />
     <style>
       /* /new: 프리셋/컨트롤 없이 “렌더링 + 수치조정”만 */
       .app {
@@ -37,7 +37,7 @@
           >컨트롤</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.26</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.27</span></div>
     </div>
 
     <div class="app">
@@ -50,14 +50,16 @@
             <div class="el-dialog__body">
               <div class="dg-body cursor-pointer" id="cardRoot">
                 <div class="dgb-overlay"></div>
+                <img id="imgOverlay" data-html2canvas-ignore="true" style="position:absolute; inset:0; pointer-events:none; z-index:9999; opacity:0.5; display:none; transform-origin:top left;" />
                 <div class="dgb-content">
                   <div class="dgb-header">
                     <h2 class="dgb-title" data-nav-target=".dgb-title">futuresusdt</h2>
                   </div>
 
                   <div class="dgb-values">
-                    <div class="dgb-pct" data-nav-target="#txtPercent">
-                      <span id="txtPercent">19.75</span> %
+                    <div class="dgb-pct">
+                      <span id="txtPercent" data-nav-target="#txtPercent">19.75</span>
+                      <span id="txtPercentSign" data-nav-target="#txtPercentSign">%</span>
                     </div>
                     <div class="dgb-amt" id="txtProfit" data-nav-target="#txtProfit">10,229,614 원</div>
                   </div>
@@ -110,13 +112,6 @@
           </div>
         </div>
 
-        <div class="generate-wrap">
-          <button id="btnGenerate" class="primary" type="button">생성</button>
-          <div id="warningNotice" class="warning-notice">
-            <span class="warn-long">LONG</span> / <span class="warn-short">SHORT</span> <span class="warn-text">확인요망</span>
-          </div>
-          <div class="generate-hint">생성 버튼을 누르세요.</div>
-        </div>
       </div>
 
       <div class="controls">
@@ -181,13 +176,9 @@
             </div>
           </label>
 
-          <label>생성 개수<input id="inpCount" type="number" min="1" max="300" value="1" /></label>
-          <label>ZIP 파일명 Prefix<input id="inpPrefix" type="text" value="screenshot" /></label>
         </div>
 
         <div class="actions">
-          <button id="btnDownloadZip" class="secondary" type="button">ZIP 저장</button>
-          <button id="btnReroll" class="secondary" type="button">미리보기 새로고침</button>
           <button id="btnReset" class="secondary" type="button">초기화</button>
         </div>
       </div>
@@ -196,8 +187,6 @@
     <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
     <div id="centerTip" class="center-tip" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.26"></script>
+    <script src="../app.js?v=t260630.27"></script>
   </body>
 </html>

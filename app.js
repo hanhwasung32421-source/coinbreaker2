@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.26";
+  const BUILD_VERSION = "t260630.27";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -100,6 +100,13 @@
   let lastCroppedPreviewUrl = null;
   let bgShiftX = 0;
   let bgShiftY = 0;
+  let overlayState = {
+    src: "",
+    opacity: 0.5,
+    scale: 1,
+    x: 0,
+    y: 0,
+  };
 
   const DEFAULT_PHRASE_CFG = {
     fmt: ["int", "2", "1"],
@@ -385,6 +392,13 @@
         prefix: toVal(els.prefix),
       },
       bg: { shiftX: bgShiftX, shiftY: bgShiftY },
+      overlay: {
+        src: String(overlayState?.src || ""),
+        opacity: clamp(overlayState?.opacity ?? 0.5, 0, 1),
+        scale: clamp(Number(overlayState?.scale) || 1, 0.1, 4),
+        x: Math.round(Number(overlayState?.x) || 0),
+        y: Math.round(Number(overlayState?.y) || 0),
+      },
       phraseCfg,
       cardCustomStyles,
     };
@@ -421,6 +435,15 @@
         bgShiftY = sy;
       }
     }
+    if (state.overlay && typeof state.overlay === "object") {
+      overlayState = {
+        src: String(state.overlay.src || ""),
+        opacity: clamp(state.overlay.opacity ?? 0.5, 0, 1),
+        scale: clamp(Number(state.overlay.scale) || 1, 0.1, 4),
+        x: Math.round(Number(state.overlay.x) || 0),
+        y: Math.round(Number(state.overlay.y) || 0),
+      };
+    }
     if (state.phraseCfg && typeof state.phraseCfg === "object") {
       const pc = state.phraseCfg;
       phraseCfg = {
@@ -433,6 +456,8 @@
     }
     fillPhraseUiFromCfg();
     syncBgShiftInputs();
+    syncOverlayUi();
+    applyOverlayToDom();
 
     cardCustomStyles = state.cardCustomStyles || {};
 
@@ -495,6 +520,37 @@
   function syncBgShiftInputs() {
     if (els.bgShiftX) els.bgShiftX.value = String(Math.round(bgShiftX));
     if (els.bgShiftY) els.bgShiftY.value = String(Math.round(bgShiftY));
+  }
+
+  function applyOverlayToDom() {
+    const imgOverlay = document.getElementById("imgOverlay");
+    if (!imgOverlay) return;
+
+    const hasSrc = !!String(overlayState?.src || "").trim();
+    if (hasSrc) {
+      imgOverlay.src = overlayState.src;
+      imgOverlay.style.display = "block";
+    } else {
+      imgOverlay.removeAttribute("src");
+      imgOverlay.style.display = "none";
+    }
+
+    imgOverlay.style.opacity = String(clamp(overlayState?.opacity ?? 0.5, 0, 1));
+    imgOverlay.style.transform = `translate(${Math.round(Number(overlayState?.x) || 0)}px, ${Math.round(Number(overlayState?.y) || 0)}px) scale(${clamp(Number(overlayState?.scale) || 1, 0.1, 4).toFixed(3)})`;
+  }
+
+  function syncOverlayUi() {
+    const lblOpacity = document.getElementById("lblOverlayOpacity");
+    const lblScale = document.getElementById("lblOverlayScale");
+    const lblX = document.getElementById("lblOverlayX");
+    const lblY = document.getElementById("lblOverlayY");
+    const rngOpacity = document.getElementById("valOverlayOpacity");
+
+    if (rngOpacity) rngOpacity.value = String(clamp(overlayState?.opacity ?? 0.5, 0, 1));
+    if (lblOpacity) lblOpacity.textContent = String(clamp(overlayState?.opacity ?? 0.5, 0, 1).toFixed(2));
+    if (lblScale) lblScale.textContent = `${Math.round(clamp(Number(overlayState?.scale) || 1, 0.1, 4) * 100)}%`;
+    if (lblX) lblX.textContent = `${Math.round(Number(overlayState?.x) || 0)}px`;
+    if (lblY) lblY.textContent = `${Math.round(Number(overlayState?.y) || 0)}px`;
   }
 
   function applyCardBackground() {
@@ -1007,8 +1063,8 @@
         els.leverage.value = DEFAULTS.leverage;
         els.entry.value = DEFAULTS.entry;
         els.bgZoom.value = String(DEFAULTS.bgZoom.toFixed(3));
-        els.count.value = String(DEFAULTS.count);
-        els.prefix.value = DEFAULTS.prefix;
+        if (els.count) els.count.value = String(DEFAULTS.count);
+        if (els.prefix) els.prefix.value = DEFAULTS.prefix;
         bgShiftX = 0;
         bgShiftY = 0;
         setSide(DEFAULTS.side, { shouldSave: false });
@@ -1490,18 +1546,22 @@
 
   function bindOverlayControls() {
     const inpFile = document.getElementById("inpOverlayFile");
-    const imgOverlay = document.getElementById("imgOverlay");
     const rngOpacity = document.getElementById("valOverlayOpacity");
-    const rngScale = document.getElementById("valOverlayScale");
-    const rngX = document.getElementById("valOverlayX");
-    const rngY = document.getElementById("valOverlayY");
+    const btnOverlayScaleDown = document.getElementById("btnOverlayScaleDown");
+    const btnOverlayScaleUp = document.getElementById("btnOverlayScaleUp");
+    const btnOverlayUp = document.getElementById("btnOverlayUp");
+    const btnOverlayDown = document.getElementById("btnOverlayDown");
+    const btnOverlayLeft = document.getElementById("btnOverlayLeft");
+    const btnOverlayRight = document.getElementById("btnOverlayRight");
+    const btnOverlayReset = document.getElementById("btnOverlayReset");
 
-    const lblOpacity = document.getElementById("lblOverlayOpacity");
-    const lblScale = document.getElementById("lblOverlayScale");
-    const lblX = document.getElementById("lblOverlayX");
-    const lblY = document.getElementById("lblOverlayY");
+    if (!document.getElementById("imgOverlay")) return;
 
-    if (!imgOverlay) return;
+    const commitOverlay = () => {
+      syncOverlayUi();
+      applyOverlayToDom();
+      scheduleCloudSave();
+    };
 
     if (inpFile) {
       inpFile.addEventListener("change", (e) => {
@@ -1509,36 +1569,52 @@
         if (file) {
           const reader = new FileReader();
           reader.onload = (event) => {
-            imgOverlay.src = event.target.result;
-            imgOverlay.style.display = "block";
-            applyOverlayStyles();
+            overlayState.src = String(event.target.result || "");
+            commitOverlay();
           };
           reader.readAsDataURL(file);
         }
       });
     }
 
-    const applyOverlayStyles = () => {
-      const opacity = rngOpacity ? rngOpacity.value : 0.5;
-      const scale = rngScale ? rngScale.value : 1.0;
-      const x = rngX ? rngX.value : 0;
-      const y = rngY ? rngY.value : 0;
+    if (rngOpacity) {
+      const onOpacity = () => {
+        overlayState.opacity = clamp(Number(rngOpacity.value), 0, 1);
+        commitOverlay();
+      };
+      rngOpacity.addEventListener("input", onOpacity);
+      rngOpacity.addEventListener("change", onOpacity);
+    }
 
-      if (lblOpacity) lblOpacity.textContent = opacity;
-      if (lblScale) lblScale.textContent = Math.round(scale * 100) + "%";
-      if (lblX) lblX.textContent = x + "px";
-      if (lblY) lblY.textContent = y + "px";
-
-      imgOverlay.style.opacity = opacity;
-      imgOverlay.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    const moveOverlay = (dx, dy) => {
+      overlayState.x = Math.round(Number(overlayState.x) || 0) + dx;
+      overlayState.y = Math.round(Number(overlayState.y) || 0) + dy;
+      commitOverlay();
+    };
+    const scaleOverlay = (delta) => {
+      overlayState.scale = clamp((Number(overlayState.scale) || 1) + delta, 0.1, 4);
+      commitOverlay();
     };
 
-    [rngOpacity, rngScale, rngX, rngY].forEach((el) => {
-      if (el) {
-        el.addEventListener("input", applyOverlayStyles);
-        el.addEventListener("change", applyOverlayStyles);
-      }
-    });
+    if (btnOverlayUp) btnOverlayUp.addEventListener("click", () => moveOverlay(0, -1));
+    if (btnOverlayDown) btnOverlayDown.addEventListener("click", () => moveOverlay(0, 1));
+    if (btnOverlayLeft) btnOverlayLeft.addEventListener("click", () => moveOverlay(-1, 0));
+    if (btnOverlayRight) btnOverlayRight.addEventListener("click", () => moveOverlay(1, 0));
+    if (btnOverlayScaleDown) btnOverlayScaleDown.addEventListener("click", () => scaleOverlay(-0.02));
+    if (btnOverlayScaleUp) btnOverlayScaleUp.addEventListener("click", () => scaleOverlay(0.02));
+    if (btnOverlayReset) {
+      btnOverlayReset.addEventListener("click", () => {
+        overlayState.x = 0;
+        overlayState.y = 0;
+        overlayState.scale = 1;
+        overlayState.opacity = 0.5;
+        if (rngOpacity) rngOpacity.value = "0.5";
+        commitOverlay();
+      });
+    }
+
+    syncOverlayUi();
+    applyOverlayToDom();
   }
 
   async function init() {
@@ -1576,8 +1652,9 @@
       }
     }
 
-    // file:// 로 직접 열면 html2canvas/clipboard 정책 때문에 캡처/복사가 실패할 수 있어 안내
-    if (location.protocol === "file:") {
+    // 캡처/복사 UI가 있는 페이지에서만 file:// 제한 안내
+    const hasCaptureUi = !!(els.generate || els.downloadZip || document.querySelector(".preset-btn"));
+    if (location.protocol === "file:" && hasCaptureUi) {
       showToastFor("권장: 로컬 서버로 열기(파일로 열면 캡처/복사 제한 가능)", 3500);
     }
   }
