@@ -4,7 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coin Breaker (Maker)</title>
-    <link rel="stylesheet" href="../style.css?v=t260630.30" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+    <!-- fallback 스타일 -->
+    <link rel="stylesheet" href="../style.css?v=t260630.31" />
+    <!-- 메인(index.html)과 동일한 렌더링 CSS를 그대로 주입 -->
+    <script>
+      (async () => {
+        try {
+          const res = await fetch(`../index.html?ts=${Date.now()}`, { cache: "no-store" });
+          const html = await res.text();
+          const m = html.match(/<style>([\s\S]*?)<\/style>/i);
+          if (m && m[1]) {
+            const st = document.createElement("style");
+            st.id = "mainInlineCss";
+            st.textContent = m[1];
+            document.head.appendChild(st);
+          }
+        } catch (e) {
+          // ignore (fallback 스타일만 사용)
+          console.warn(e);
+        }
+      })();
+    </script>
     <style>
       /* maker: 메인 복제 기반, 프리셋/캡쳐 미리보기/네비게이터 제거 */
       .app { grid-template-columns: 520px 600px; }
@@ -32,7 +53,7 @@
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.30</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.31</span></div>
     </div>
 
     <div class="app">
@@ -198,6 +219,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.30"></script>
+    <script src="../app.js?v=t260630.31"></script>
   </body>
 </html>
