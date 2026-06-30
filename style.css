@@ -5,8 +5,8 @@
   --muted:rgba(231,238,252,.65);
   --accent:#0abf7f;
 
-  --card-w:400px;
-  --card-h:423px;
+  --card-w:425px;
+  --card-h:425px;
   --card-pad:24px;
   --top-main:8px;
   --top-profit:52px;
@@ -197,8 +197,8 @@ button.secondary{ background:#0c1220; }
   z-index: 1;
 }
 
-/* Default/LONG glowing overlay */
-.dg-body.LONG::after {
+/* Glowing green terminal grid overlay */
+.dg-body::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -210,19 +210,6 @@ button.secondary{ background:#0c1220; }
               repeating-linear-gradient(0deg, transparent 0px, transparent 34px, rgba(34, 197, 94, 0.043) 34px, rgba(34, 197, 94, 0.043) 35px);
 }
 
-/* SHORT glowing overlay */
-.dg-body.SHORT::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  background: radial-gradient(circle at 82% 18%, rgba(239, 68, 68, 0.22), transparent 30%),
-              linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.02) 48%, transparent 72%),
-              repeating-linear-gradient(90deg, transparent 0px, transparent 34px, rgba(239, 68, 68, 0.055) 34px, rgba(239, 68, 68, 0.055) 35px),
-              repeating-linear-gradient(0deg, transparent 0px, transparent 34px, rgba(239, 68, 68, 0.043) 34px, rgba(239, 68, 68, 0.043) 35px);
-}
-
 .dgb-content {
   position: relative;
   z-index: 10;
@@ -230,7 +217,6 @@ button.secondary{ background:#0c1220; }
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
 .dgb-header {
@@ -267,14 +253,7 @@ button.secondary{ background:#0c1220; }
   align-items: baseline;
   gap: 4px;
   letter-spacing: -0.025em;
-}
-
-.dg-body.LONG .dgb-pct {
   color: #22C55E;
-}
-
-.dg-body.SHORT .dgb-pct {
-  color: #EF4444;
 }
 
 .dgb-pct .percent-sign {
