@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.35";
+  const BUILD_VERSION = "t260630.36";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -609,7 +609,10 @@
       els.cardRoot.classList.toggle("SHORT", side === "SHORT");
     }
     if (els.txtSide) {
-      els.txtSide.textContent = side === "LONG" ? "롱" : "숏";
+      const sideText = side === "LONG" ? "롱" : "숏";
+      const t = els.txtSide.querySelector?.(".dgb-side-text");
+      if (t) t.textContent = sideText;
+      else els.txtSide.textContent = sideText;
       els.txtSide.classList.toggle("LONG", side === "LONG");
       els.txtSide.classList.toggle("SHORT", side === "SHORT");
     }

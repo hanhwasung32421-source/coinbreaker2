@@ -382,9 +382,14 @@ button.secondary{ background:#0c1220; }
 .dgb-side-badge.LONG { color: #22C55E; --badge-box-rgb: 250, 204, 21; }
 .dgb-side-badge.SHORT { color: #EF4444; --badge-box-rgb: 250, 204, 21; }
 
-/* 컨트롤 렌더링 화면에서는 격자 패턴 제거 */
+/* 컨트롤 렌더링 화면: 배경은 유지하고(어두운 그라데이션) 격자 패턴만 제거 */
 .dg-body{
-  background-image: none !important;
+  background-image:
+    radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.06) 0%, rgba(11,15,23,0.0) 55%),
+    radial-gradient(120% 120% at 50% 100%, rgba(0,0,0,0.55) 0%, rgba(11,15,23,0.0) 55%),
+    linear-gradient(180deg, rgba(11,15,23,0.98) 0%, rgba(11,15,23,0.92) 100%) !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
 }
 
 .shift-stepper {
@@ -615,7 +620,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.35</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.36</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -958,6 +963,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.35"></script>
+    <script src="../app.js?v=t260630.36"></script>
   </body>
 </html>
