@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.44";
+  const BUILD_VERSION = "t260630.45";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -120,6 +120,16 @@
     part4Prob: 25,
   };
   let phraseCfg = JSON.parse(JSON.stringify(DEFAULT_PHRASE_CFG));
+  const DEFAULT_CROP_CFG = {
+    fullCaptureProb: 5,
+    widthMinPct: 50,
+    widthMaxPct: 100,
+    startPadXMax: 28,
+    startPadYMax: 18,
+    bottomPadMin: 12,
+    bottomPadMax: 36,
+  };
+  let cropCfg = { ...DEFAULT_CROP_CFG };
   let presetPart4Assignment = null;
   let presetPart4PoolKey = "";
 
@@ -401,6 +411,7 @@
         y: Math.round(Number(overlayState?.y) || 0),
       },
       phraseCfg,
+      cropCfg,
       cardCustomStyles,
     };
   }
@@ -455,7 +466,22 @@
         part4Prob: clamp(pc.part4Prob, 0, 100),
       };
     }
+    if (state.cropCfg && typeof state.cropCfg === "object") {
+      const cc = state.cropCfg;
+      cropCfg = {
+        fullCaptureProb: clamp(cc.fullCaptureProb, 0, 100),
+        widthMinPct: clamp(cc.widthMinPct, 1, 100),
+        widthMaxPct: clamp(cc.widthMaxPct, clamp(cc.widthMinPct, 1, 100), 100),
+        startPadXMax: Math.max(0, Math.round(Number(cc.startPadXMax) || 0)),
+        startPadYMax: Math.max(0, Math.round(Number(cc.startPadYMax) || 0)),
+        bottomPadMin: Math.max(0, Math.round(Number(cc.bottomPadMin) || 0)),
+        bottomPadMax: Math.max(Math.max(0, Math.round(Number(cc.bottomPadMin) || 0)), Math.round(Number(cc.bottomPadMax) || 0)),
+      };
+    } else {
+      cropCfg = { ...DEFAULT_CROP_CFG };
+    }
     fillPhraseUiFromCfg();
+    fillCropUiFromCfg();
     syncBgShiftInputs();
     syncOverlayUi();
     applyOverlayToDom();
@@ -540,6 +566,41 @@
     clearTimeout(cloudSaveTimer);
     cloudSavePending = true;
     cloudSaveTimer = setTimeout(() => cloudSaveNow({ silent: true }), 1200);
+  }
+
+  function fillCropUiFromCfg() {
+    const setVal = (id, v) => {
+      const el = document.getElementById(id);
+      if (el) el.value = String(v);
+    };
+    setVal("inpCropFullCaptureProb", clamp(cropCfg.fullCaptureProb, 0, 100));
+    setVal("inpCropWidthMinPct", clamp(cropCfg.widthMinPct, 1, 100));
+    setVal("inpCropWidthMaxPct", clamp(cropCfg.widthMaxPct, 1, 100));
+    setVal("inpCropStartPadXMax", Math.max(0, Math.round(cropCfg.startPadXMax)));
+    setVal("inpCropStartPadYMax", Math.max(0, Math.round(cropCfg.startPadYMax)));
+    setVal("inpCropBottomPadMin", Math.max(0, Math.round(cropCfg.bottomPadMin)));
+    setVal("inpCropBottomPadMax", Math.max(0, Math.round(cropCfg.bottomPadMax)));
+  }
+
+  function readCropCfgFromUi() {
+    const num = (id, fallback) => {
+      const el = document.getElementById(id);
+      const v = Number(el?.value);
+      return Number.isFinite(v) ? v : fallback;
+    };
+    const widthMinPct = clamp(num("inpCropWidthMinPct", DEFAULT_CROP_CFG.widthMinPct), 1, 100);
+    const widthMaxPct = clamp(num("inpCropWidthMaxPct", DEFAULT_CROP_CFG.widthMaxPct), widthMinPct, 100);
+    const bottomPadMin = Math.max(0, Math.round(num("inpCropBottomPadMin", DEFAULT_CROP_CFG.bottomPadMin)));
+    const bottomPadMax = Math.max(bottomPadMin, Math.round(num("inpCropBottomPadMax", DEFAULT_CROP_CFG.bottomPadMax)));
+    return {
+      fullCaptureProb: clamp(num("inpCropFullCaptureProb", DEFAULT_CROP_CFG.fullCaptureProb), 0, 100),
+      widthMinPct,
+      widthMaxPct,
+      startPadXMax: Math.max(0, Math.round(num("inpCropStartPadXMax", DEFAULT_CROP_CFG.startPadXMax))),
+      startPadYMax: Math.max(0, Math.round(num("inpCropStartPadYMax", DEFAULT_CROP_CFG.startPadYMax))),
+      bottomPadMin,
+      bottomPadMax,
+    };
   }
 
   function flushCloudSaveOnLeave() {
@@ -726,9 +787,9 @@
   // ---- 캡쳐 매커니즘 (새 구현) ----
   // 요구사항:
   // - 수익퍼센트/수익금액은 무조건 보이게 캡쳐
-  // - 5% 확률로 수익화면 전체 캡쳐(카드 전체)
+  // - 설정된 확률로 수익화면 전체 캡쳐(카드 전체)
   // - 시작점은 항상 퍼센트 왼쪽 위 기준으로 랜덤한 좌표
-  // - 캡쳐 가로: 카드의 60~100%
+  // - 캡쳐 가로: 설정된 최소~최대 비율 (오른쪽부터 잘림)
   // - 캡쳐 세로: (수익금액이 나오는 최소 범위) ~ (종료가격 숫자가 보이는 곳까지) 범위에서 랜덤
   function rectUnion(a, b) {
     if (!a) return b;
@@ -772,7 +833,7 @@
     const rootRect = els.cardRoot.getBoundingClientRect();
     const W = rootRect.width;
     const H = rootRect.height;
-    if (Math.random() < 0.05) return { x: 0, y: 0, w: W, h: H };
+    if (Math.random() < clamp((cropCfg?.fullCaptureProb ?? DEFAULT_CROP_CFG.fullCaptureProb) / 100, 0, 1)) return { x: 0, y: 0, w: W, h: H };
 
     // 텍스트 실제 글자 기준(폭 100% 요소 제외)
     const percentRect =
@@ -786,20 +847,28 @@
     const requiredRect = rectUnion(percentRect, profitRect);
 
     // 시작점: 퍼센트 왼쪽 위 기준으로 랜덤 (단, requiredRect를 포함하기 쉬운 범위로 제한)
-    const startPadX = randInt(0, 28);
-    const startPadY = randInt(0, 18);
+    const startPadX = randInt(0, Math.max(0, Math.round(cropCfg?.startPadXMax ?? DEFAULT_CROP_CFG.startPadXMax)));
+    const startPadY = randInt(0, Math.max(0, Math.round(cropCfg?.startPadYMax ?? DEFAULT_CROP_CFG.startPadYMax)));
     let x = Math.max(0, Math.floor(percentRect.x - startPadX));
     let y = Math.max(0, Math.floor(percentRect.y - startPadY));
 
-    // 가로: 60~100% 랜덤, 단 텍스트(퍼센트+수익금)는 절대 잘리면 안 됨
+    // 가로: 설정 비율 범위에서 랜덤, 단 텍스트(퍼센트+수익금)는 절대 잘리면 안 됨
     const requiredRight = Math.ceil(requiredRect.x + requiredRect.w);
-    let w = Math.round(randFloat(0.6, 1.0) * W);
+    const widthMinRatio = clamp((cropCfg?.widthMinPct ?? DEFAULT_CROP_CFG.widthMinPct) / 100, 0.01, 1);
+    const widthMaxRatio = clamp((cropCfg?.widthMaxPct ?? DEFAULT_CROP_CFG.widthMaxPct) / 100, widthMinRatio, 1);
+    let w = Math.round(randFloat(widthMinRatio, widthMaxRatio) * W);
     w = Math.max(1, Math.min(W - x, w));
     if (x + w < requiredRight) w = Math.min(W - x, requiredRight - x);
 
     // 세로: 최소는 "수익금액이 보이는 최소 범위"(profit bottom 포함),
     // 최대는 "종료가격 숫자가 보이는 곳까지"(exit bottom 포함)
-    const padBottom = randInt(12, 36);
+    const padBottom = randInt(
+      Math.max(0, Math.round(cropCfg?.bottomPadMin ?? DEFAULT_CROP_CFG.bottomPadMin)),
+      Math.max(
+        Math.max(0, Math.round(cropCfg?.bottomPadMin ?? DEFAULT_CROP_CFG.bottomPadMin)),
+        Math.round(cropCfg?.bottomPadMax ?? DEFAULT_CROP_CFG.bottomPadMax)
+      )
+    );
     const minH = Math.ceil(profitRect.y + profitRect.h + padBottom) - y;
     const maxH = Math.ceil(exitRect.y + exitRect.h + padBottom) - y;
     const lo = Math.max(1, Math.min(H - y, Math.min(minH, maxH)));
@@ -1044,6 +1113,30 @@
       scheduleCloudSave();
     };
     [els.phraseFmt, els.phraseUnit, els.phrasePart3, els.phrasePart4, els.phrasePart4Prob].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("input", onEdit);
+      el.addEventListener("change", onEdit);
+    });
+  }
+
+  function bindCropUi() {
+    fillCropUiFromCfg();
+    const ids = [
+      "inpCropFullCaptureProb",
+      "inpCropWidthMinPct",
+      "inpCropWidthMaxPct",
+      "inpCropStartPadXMax",
+      "inpCropStartPadYMax",
+      "inpCropBottomPadMin",
+      "inpCropBottomPadMax",
+    ];
+    const onEdit = () => {
+      cropCfg = readCropCfgFromUi();
+      fillCropUiFromCfg();
+      scheduleCloudSave();
+    };
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
       if (!el) return;
       el.addEventListener("input", onEdit);
       el.addEventListener("change", onEdit);
@@ -1939,6 +2032,7 @@
 
   async function init() {
     bindPhraseUi();
+    bindCropUi();
     bind();
     bindSideUi();
     syncBgShiftInputs();
