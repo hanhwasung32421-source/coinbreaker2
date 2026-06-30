@@ -331,22 +331,36 @@ button.secondary{ background:#0c1220; }
 .dgb-side-badge {
   font-size: 14px;
   font-weight: 600;
-  padding: 2px 10px;
-  border-radius: 6px;
-  border: 1px solid transparent;
   text-align: center;
 }
 
 .dgb-side-badge.LONG {
   color: #22C55E;
-  border-color: rgba(34, 197, 94, 0.2);
-  background-color: rgba(34, 197, 94, 0.05);
 }
 
 .dgb-side-badge.SHORT {
   color: #EF4444;
-  border-color: rgba(239, 68, 68, 0.2);
-  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.shift-stepper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.shift-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  width: 100%;
+}
+
+.shift-row button {
+  min-width: 70px;
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 @media (max-width:1500px){
@@ -534,6 +548,25 @@ button.secondary{ background:#0c1220; }
             <div class="zoom-stepper">
               <button id="btnZoomOut" class="secondary" type="button">축소 -0.1%</button>
               <button id="btnZoomIn" class="secondary" type="button">확대 +0.1%</button>
+            </div>
+          </label>
+          <label>배경 위치 이동 (X / Y)
+            <div class="dual-input">
+              <input id="inpBgShiftX" type="number" placeholder="X" value="0" />
+              <input id="inpBgShiftY" type="number" placeholder="Y" value="28" />
+            </div>
+            <div class="shift-stepper">
+              <div class="shift-row">
+                <button id="btnShiftUp" class="secondary" type="button">▲ 위로</button>
+              </div>
+              <div class="shift-row">
+                <button id="btnShiftLeft" class="secondary" type="button">◀ 왼쪽</button>
+                <button id="btnShiftReset" class="secondary" type="button">↺ 리셋</button>
+                <button id="btnShiftRight" class="secondary" type="button">오른쪽 ▶</button>
+              </div>
+              <div class="shift-row">
+                <button id="btnShiftDown" class="secondary" type="button">▼ 아래로</button>
+              </div>
             </div>
           </label>
         </div>
