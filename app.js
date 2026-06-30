@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.41";
+  const BUILD_VERSION = "t260630.42";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -1555,8 +1555,21 @@
           else el.style.height = "";
           if (styleData.opacity != null && styleData.opacity !== "") el.style.opacity = String(clamp(styleData.opacity, 0, 1));
           else el.style.opacity = "";
-          if (styleData.color) el.style.backgroundColor = styleData.color;
-          else el.style.backgroundColor = "";
+          if (styleData.color) {
+            el.style.backgroundColor = styleData.color;
+            const rgb = hexToRgb(styleData.color);
+            if (rgb) {
+              el.style.borderColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.95)`;
+              el.style.boxShadow = `0 0 10px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clamp((Number(styleData.opacity) || 1) * 0.45, 0, 1)})`;
+            } else {
+              el.style.borderColor = "";
+              el.style.boxShadow = "";
+            }
+          } else {
+            el.style.backgroundColor = "";
+            el.style.borderColor = "";
+            el.style.boxShadow = "";
+          }
         }
         if (selector === ".dgb-close-btn") {
           if (styleData.size) {
