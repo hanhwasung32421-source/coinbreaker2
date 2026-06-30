@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coin Breaker (Maker)</title>
-    <link rel="stylesheet" href="../style.css?v=t260630.29" />
+    <link rel="stylesheet" href="../style.css?v=t260630.30" />
     <style>
       /* maker: 메인 복제 기반, 프리셋/캡쳐 미리보기/네비게이터 제거 */
       .app { grid-template-columns: 520px 600px; }
@@ -32,7 +32,7 @@
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.29</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.30</span></div>
     </div>
 
     <div class="app">
@@ -66,7 +66,10 @@
                       <label class="dgb-grid-label" data-nav-target=".dgb-grid-item:nth-child(1) .dgb-grid-label">코인</label>
                       <div class="dgb-grid-value-wrap">
                         <span id="txtSymbol" data-nav-target="#txtSymbol">DOGE/USDT</span>
-                        <span id="txtSide" class="dgb-side-badge SHORT" data-nav-target="#txtSide">SHORT</span>
+                        <span id="txtSide" class="dgb-side-badge SHORT" data-nav-target="#txtSide">
+                          <span class="dgb-side-box" aria-hidden="true"></span>
+                          <span class="dgb-side-text">SHORT</span>
+                        </span>
                       </div>
                     </div>
                     <div class="dgb-grid-item">
@@ -195,7 +198,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t260630.29"></script>
+    <script src="../app.js?v=t260630.30"></script>
   </body>
 </html>
-

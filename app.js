@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.29";
+  const BUILD_VERSION = "t260630.30";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -1193,6 +1193,7 @@
     const inpText = document.getElementById("inpNavText");
     const clrPicker = document.getElementById("clrNavColor");
     const selFont = document.getElementById("selNavFont");
+    const inpColorHex = document.getElementById("inpNavColorHex");
     const rngSideBadgeSize = document.getElementById("rngSideBadgeSize");
     const rngSideBadgeBorder = document.getElementById("rngSideBadgeBorder");
     const rngSideBadgeOpacity = document.getElementById("rngSideBadgeOpacity");
@@ -1202,7 +1203,7 @@
 
     const ensureStyle = (selector) => {
       if (!cardCustomStyles[selector]) {
-        cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null };
+        cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
       }
       return cardCustomStyles[selector];
     };
@@ -1218,7 +1219,7 @@
       const st = ensureStyle("#txtSide");
       if (rngSideBadgeSize) st.badgeSize = Number(rngSideBadgeSize.value);
       if (rngSideBadgeBorder) st.badgeBorder = Number(rngSideBadgeBorder.value);
-      if (rngSideBadgeOpacity) st.opacity = Number(rngSideBadgeOpacity.value);
+      if (rngSideBadgeOpacity) st.badgeBoxAlpha = Number(rngSideBadgeOpacity.value);
       if (lblSideBadgeSize && rngSideBadgeSize) lblSideBadgeSize.textContent = `${Math.round(Number(rngSideBadgeSize.value))}px`;
       if (lblSideBadgeBorder && rngSideBadgeBorder) lblSideBadgeBorder.textContent = `${Math.round(Number(rngSideBadgeBorder.value))}px`;
       if (lblSideBadgeOpacity && rngSideBadgeOpacity) lblSideBadgeOpacity.textContent = String(Number(rngSideBadgeOpacity.value).toFixed(2));
@@ -1236,7 +1237,7 @@
       const updateText = () => {
         const selector = selTarget.value;
         if (!cardCustomStyles[selector]) {
-          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null };
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
         }
         cardCustomStyles[selector].text = inpText.value;
         renderAll();
@@ -1250,19 +1251,38 @@
       clrPicker.addEventListener("input", () => {
         const selector = selTarget.value;
         if (!cardCustomStyles[selector]) {
-          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null };
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
         }
         cardCustomStyles[selector].color = clrPicker.value;
+        if (inpColorHex) inpColorHex.value = clrPicker.value;
         renderAll();
         scheduleCloudSave();
       });
+    }
+
+    // HEX 입력(#RRGGBB) → 즉시 색상 적용
+    if (inpColorHex) {
+      const applyHex = () => {
+        const raw = String(inpColorHex.value || "").trim();
+        const m = raw.match(/^#?([0-9a-fA-F]{6})$/);
+        if (!m) return;
+        const hex = "#" + m[1].toLowerCase();
+        const selector = selTarget.value;
+        const st = ensureStyle(selector);
+        st.color = hex;
+        if (clrPicker) clrPicker.value = hex;
+        renderAll();
+        scheduleCloudSave();
+      };
+      inpColorHex.addEventListener("input", applyHex);
+      inpColorHex.addEventListener("change", applyHex);
     }
 
     if (selFont) {
       selFont.addEventListener("change", () => {
         const selector = selTarget.value;
         if (!cardCustomStyles[selector]) {
-          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null };
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
         }
         cardCustomStyles[selector].font = selFont.value;
         renderAll();
@@ -1275,7 +1295,7 @@
       btnBolder.addEventListener("click", () => {
         const selector = selTarget.value;
         if (!cardCustomStyles[selector]) {
-          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null };
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
         }
         cardCustomStyles[selector].weight = "700";
         renderAll();
@@ -1288,7 +1308,7 @@
       btnLighter.addEventListener("click", () => {
         const selector = selTarget.value;
         if (!cardCustomStyles[selector]) {
-          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null };
+          cardCustomStyles[selector] = { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
         }
         cardCustomStyles[selector].weight = "400";
         renderAll();
@@ -1371,6 +1391,9 @@
     window.addEventListener("keydown", (e) => {
       const chk = document.getElementById("chkKbControl");
       if (!chk || !chk.checked) return;
+      const chkOverlay = document.getElementById("chkOverlayKb");
+      // 오버레이 키보드 조작이 켜져 있으면 네비게이터 단축키는 비활성(겹침 방지)
+      if (chkOverlay && chkOverlay.checked) return;
 
       // Skip keyboard adjustments if user is typing in a text field
       if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") {
@@ -1443,8 +1466,13 @@
         else el.style.color = "";
         if (styleData.font && styleData.font !== "inherit") el.style.fontFamily = styleData.font;
         else el.style.fontFamily = "";
-        if (styleData.opacity != null && styleData.opacity !== "") el.style.opacity = String(styleData.opacity);
-        else el.style.opacity = "";
+        if (selector !== "#txtSide") {
+          if (styleData.opacity != null && styleData.opacity !== "") el.style.opacity = String(styleData.opacity);
+          else el.style.opacity = "";
+        } else {
+          // 롱/숏은 박스 투명도를 별도 변수로 제어(텍스트는 고정)
+          el.style.opacity = "";
+        }
 
         // LONG/SHORT 뱃지 박스(크기/굵기/투명도)
         if (selector === "#txtSide") {
@@ -1452,22 +1480,30 @@
           else el.style.removeProperty("--badge-size");
           if (styleData.badgeBorder != null && styleData.badgeBorder !== "") el.style.setProperty("--badge-border-width", `${Math.round(Number(styleData.badgeBorder) || 1)}px`);
           else el.style.removeProperty("--badge-border-width");
+          const boxAlpha = styleData.badgeBoxAlpha != null ? Number(styleData.badgeBoxAlpha) : (styleData.opacity != null ? Number(styleData.opacity) : 0.15);
+          el.style.setProperty("--badge-box-alpha", String(clamp(boxAlpha, 0, 1)));
         }
         if (styleData.text !== undefined && styleData.text !== null && styleData.text !== "") {
-          el.textContent = styleData.text;
+          if (selector === "#txtSide") {
+            const t = el.querySelector(".dgb-side-text");
+            if (t) t.textContent = styleData.text;
+          } else {
+            el.textContent = styleData.text;
+          }
         }
       }
     });
   }
 
   function updateNavControlsForTarget(selector) {
-    const styleData = cardCustomStyles[selector] || { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null };
+    const styleData = cardCustomStyles[selector] || { x: 0, y: 0, size: null, weight: null, color: null, font: "inherit", text: null, opacity: null, badgeSize: null, badgeBorder: null, badgeBoxAlpha: null };
     const el = els.cardRoot.querySelector(selector);
     const inpText = document.getElementById("inpNavText");
     if (inpText) {
       inpText.value = styleData.text !== undefined && styleData.text !== null ? styleData.text : (el ? el.textContent : "");
     }
     const clrPicker = document.getElementById("clrNavColor");
+    const inpColorHex = document.getElementById("inpNavColorHex");
     if (clrPicker) {
       if (styleData.color) {
         clrPicker.value = styleData.color;
@@ -1476,6 +1512,9 @@
       } else {
         clrPicker.value = "#ffffff";
       }
+    }
+    if (inpColorHex) {
+      inpColorHex.value = styleData.color ? String(styleData.color) : (el ? (rgbToHex(window.getComputedStyle(el).color) || "#ffffff") : "#ffffff");
     }
     const selFont = document.getElementById("selNavFont");
     if (selFont) {
@@ -1508,8 +1547,11 @@
       if (lblBadgeBorder) lblBadgeBorder.textContent = `${Math.round(Number(rngBadgeBorder.value))}px`;
     }
     if (rngBadgeOpacity) {
-      const v = styleData.opacity != null ? Number(styleData.opacity) : (el ? parseFloat(getComputedStyle(el).opacity) || 1 : 1);
-      rngBadgeOpacity.value = String(Number.isFinite(v) ? v : 1);
+      const v =
+        styleData.badgeBoxAlpha != null
+          ? Number(styleData.badgeBoxAlpha)
+          : (styleData.opacity != null ? Number(styleData.opacity) : (el ? parseFloat(getComputedStyle(el).getPropertyValue("--badge-box-alpha")) || 0.15 : 0.15));
+      rngBadgeOpacity.value = String(Number.isFinite(v) ? v : 0.15);
       if (lblBadgeOpacity) lblBadgeOpacity.textContent = String(Number(rngBadgeOpacity.value).toFixed(2));
     }
   }
@@ -1610,6 +1652,43 @@
         overlayState.opacity = 0.5;
         if (rngOpacity) rngOpacity.value = "0.5";
         commitOverlay();
+      });
+    }
+
+    // 오버레이 키보드 조작 (체크박스가 체크된 경우만)
+    if (!bindOverlayControls._kbBound) {
+      bindOverlayControls._kbBound = true;
+      window.addEventListener("keydown", (e) => {
+        const chk = document.getElementById("chkOverlayKb");
+        if (!chk || !chk.checked) return;
+
+        // 입력 중이면 무시 (체크박스 자체는 예외)
+        if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
+          if (e.target.id !== "chkOverlayKb") return;
+        }
+
+        let handled = false;
+        if (e.key === "ArrowUp") {
+          moveOverlay(0, -1);
+          handled = true;
+        } else if (e.key === "ArrowDown") {
+          moveOverlay(0, 1);
+          handled = true;
+        } else if (e.key === "ArrowLeft") {
+          moveOverlay(-1, 0);
+          handled = true;
+        } else if (e.key === "ArrowRight") {
+          moveOverlay(1, 0);
+          handled = true;
+        } else if (e.code === "NumpadAdd") {
+          scaleOverlay(+0.02);
+          handled = true;
+        } else if (e.code === "NumpadSubtract") {
+          scaleOverlay(-0.02);
+          handled = true;
+        }
+
+        if (handled) e.preventDefault();
       });
     }
 
