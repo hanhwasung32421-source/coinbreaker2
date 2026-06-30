@@ -3,41 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Coin Breaker (New)</title>
-    <link rel="stylesheet" href="../style.css?v=t260630.28" />
+    <title>Coin Breaker (Maker)</title>
+    <link rel="stylesheet" href="../style.css?v=t260630.29" />
     <style>
-      /* /new: 프리셋/컨트롤 없이 “렌더링 + 수치조정”만 */
-      .app {
-        grid-template-columns: 520px 600px;
-      }
-      .controls {
-        width: 600px;
-        min-width: 600px;
-        max-width: 600px;
-      }
-      .controls h1 {
-        margin: 0 0 14px;
-        font-size: 18px;
-        font-weight: 700;
-      }
+      /* maker: 메인 복제 기반, 프리셋/캡쳐 미리보기/네비게이터 제거 */
+      .app { grid-template-columns: 520px 600px; }
+      .controls { width: 600px; min-width: 600px; max-width: 600px; }
+      .controls h1 { margin: 0 0 14px; font-size: 18px; font-weight: 700; }
+      .hint { display: none; }
     </style>
   </head>
   <body>
     <div class="topbar">
       <div class="topbar-left">
-        Coin Breaker
         <a
-          href="../new/"
-          style="margin-left:10px; font-size:12px; padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0c1220; color:rgba(231,238,252,.92); text-decoration:none;"
-          >일반버전</a
+          href="../"
+          style="display:inline-block; font-weight:800; font-size:13px; color:rgba(231,238,252,.92); text-decoration:none; padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0c1220;"
+          >Coin Breaker</a
         >
         <a
           href="../control/"
           style="margin-left:6px; font-size:12px; padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0c1220; color:rgba(231,238,252,.92); text-decoration:none;"
           >컨트롤</a
         >
+        <a
+          href="../maker/"
+          style="margin-left:6px; font-size:12px; padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0c1220; color:rgba(231,238,252,.92); text-decoration:none;"
+          >maker</a
+        >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t260630.28</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t260630.29</span></div>
     </div>
 
     <div class="app">
@@ -112,10 +107,17 @@
           </div>
         </div>
 
+        <div class="generate-wrap">
+          <button id="btnGenerate" class="primary" type="button">생성</button>
+          <div id="warningNotice" class="warning-notice">
+            <span class="warn-long">LONG</span> / <span class="warn-short">SHORT</span> <span class="warn-text">확인요망</span>
+          </div>
+          <div class="generate-hint">생성 버튼을 누르세요.</div>
+        </div>
       </div>
 
       <div class="controls">
-        <h1>수치 조정</h1>
+        <h1>Maker</h1>
 
         <div class="grid">
           <label>수익 퍼센트(최소)<input id="inpPercentMin" type="number" step="0.01" value="20" /></label>
@@ -176,9 +178,13 @@
             </div>
           </label>
 
+          <label>생성 개수<input id="inpCount" type="number" min="1" max="300" value="1" /></label>
+          <label>ZIP 파일명 Prefix<input id="inpPrefix" type="text" value="screenshot" /></label>
         </div>
 
         <div class="actions">
+          <button id="btnDownloadZip" class="secondary" type="button">ZIP 저장</button>
+          <button id="btnReroll" class="secondary" type="button">미리보기 새로고침</button>
           <button id="btnReset" class="secondary" type="button">초기화</button>
         </div>
       </div>
@@ -187,6 +193,9 @@
     <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
     <div id="centerTip" class="center-tip" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="../app.js?v=t260630.28"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="../app.js?v=t260630.29"></script>
   </body>
 </html>
+
