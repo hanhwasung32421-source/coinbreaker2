@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.39";
+  const BUILD_VERSION = "t260630.40";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -1227,6 +1227,10 @@
     const lblSideBadgeHeight = document.getElementById("lblSideBadgeHeight");
     const lblSideBadgeBorder = document.getElementById("lblSideBadgeBorder");
     const lblSideBadgeOpacity = document.getElementById("lblSideBadgeOpacity");
+    const rngProfitDividerWidth = document.getElementById("rngProfitDividerWidth");
+    const rngProfitDividerThick = document.getElementById("rngProfitDividerThick");
+    const lblProfitDividerWidth = document.getElementById("lblProfitDividerWidth");
+    const lblProfitDividerThick = document.getElementById("lblProfitDividerThick");
 
     const ensureStyle = (selector) => {
       if (!cardCustomStyles[selector]) {
@@ -1265,6 +1269,22 @@
       if (!el) return;
       el.addEventListener("input", applySideBadge);
       el.addEventListener("change", applySideBadge);
+    });
+
+    // 파란 구분선( #profitDivider ) 전용
+    const applyProfitDivider = () => {
+      const st = ensureStyle("#profitDivider");
+      if (rngProfitDividerWidth) st.size = Number(rngProfitDividerWidth.value);
+      if (rngProfitDividerThick) st.weight = Number(rngProfitDividerThick.value);
+      if (lblProfitDividerWidth && rngProfitDividerWidth) lblProfitDividerWidth.textContent = `${Math.round(Number(rngProfitDividerWidth.value))}px`;
+      if (lblProfitDividerThick && rngProfitDividerThick) lblProfitDividerThick.textContent = `${Math.round(Number(rngProfitDividerThick.value))}px`;
+      renderAll();
+      scheduleCloudSave();
+    };
+    [rngProfitDividerWidth, rngProfitDividerThick].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("input", applyProfitDivider);
+      el.addEventListener("change", applyProfitDivider);
     });
 
     if (inpText) {
@@ -1718,6 +1738,29 @@
               : (styleData.opacity != null ? Number(styleData.opacity) : (els.cardRoot.querySelector("#txtSide") ? parseFloat(getComputedStyle(els.cardRoot.querySelector("#txtSide")).getPropertyValue("--badge-box-alpha")) || 1 : 1)));
       rngBadgeOpacity.value = String(Number.isFinite(v) ? v : 1);
       if (lblBadgeOpacity) lblBadgeOpacity.textContent = String(Number(rngBadgeOpacity.value).toFixed(2));
+    }
+
+    // 파란 구분선 전용 컨트롤
+    const rngPDWidth = document.getElementById("rngProfitDividerWidth");
+    const rngPDThick = document.getElementById("rngProfitDividerThick");
+    const lblPDWidth = document.getElementById("lblProfitDividerWidth");
+    const lblPDThick = document.getElementById("lblProfitDividerThick");
+
+    const pdEnabled = selector === "#profitDivider";
+    [rngPDWidth, rngPDThick].forEach((x) => {
+      if (!x) return;
+      x.disabled = !pdEnabled;
+      x.style.opacity = pdEnabled ? "1" : "0.4";
+    });
+    if (rngPDWidth) {
+      const v = styleData.size != null ? Number(styleData.size) : (el ? Math.round(el.getBoundingClientRect().width || 300) : 300);
+      rngPDWidth.value = String(Number.isFinite(v) ? v : 300);
+      if (lblPDWidth) lblPDWidth.textContent = `${Math.round(Number(rngPDWidth.value))}px`;
+    }
+    if (rngPDThick) {
+      const v = styleData.weight != null ? Number(styleData.weight) : (el ? Math.round(el.getBoundingClientRect().height || 4) : 4);
+      rngPDThick.value = String(Number.isFinite(v) ? v : 4);
+      if (lblPDThick) lblPDThick.textContent = `${Math.round(Number(rngPDThick.value))}px`;
     }
   }
 
