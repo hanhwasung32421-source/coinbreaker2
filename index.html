@@ -205,9 +205,7 @@ button.secondary{ background:#0c1220; }
   z-index: 1;
 }
 
-/* Glowing green terminal grid overlay */
-.dg-body::after {
-  content: "";
+.dgb-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -234,16 +232,30 @@ button.secondary{ background:#0c1220; }
   margin-bottom: 24px;
 }
 
-.dgb-logo {
+.dgb-title {
   font-size: 18px;
   font-weight: 700;
   color: #F8FAFC;
   letter-spacing: -0.025em;
+  margin: 0;
 }
 
-.dgb-close {
-  font-size: 16px;
-  color: #9ca3af;
+.dgb-close-btn {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+  z-index: 20;
 }
 
 .dgb-values {
@@ -386,10 +398,10 @@ button.secondary{ background:#0c1220; }
             </div>
             <div class="el-dialog__body">
               <div class="dg-body cursor-pointer" id="cardRoot">
+                <div class="dgb-overlay"></div>
                 <div class="dgb-content">
                   <div class="dgb-header">
-                    <span class="dgb-logo">futuresusdt</span>
-                    <span class="dgb-close">✕</span>
+                    <h2 class="dgb-title">futuresusdt</h2>
                   </div>
                   <div class="dgb-values">
                     <div class="dgb-pct">
@@ -420,6 +432,9 @@ button.secondary{ background:#0c1220; }
                     </div>
                   </div>
                 </div>
+                <button type="button" class="dgb-close-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x h-4 w-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
               </div>
             </div>
           </div>
