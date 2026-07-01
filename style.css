@@ -93,9 +93,35 @@ body{
   border-radius:12px;
 }
 
-.card-shell{ padding:16px; width:fit-content; }
+.card-shell{ padding:16px; width:fit-content; position:relative; }
 .hint,.generate-hint,.preset-title,.phrase-settings,.notes,.copied-preview-title{ color:var(--muted); font-size:12px; line-height:1.4; }
 .generate-wrap,.preset-wrap,.copied-preview-wrap{ padding:14px 16px; display:grid; gap:10px; }
+.masked-preview-stage{
+  position:absolute;
+  inset:16px;
+  border-radius:14px;
+  background:#000;
+  z-index:10000;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.masked-preview-empty{
+  color:rgba(255,255,255,.42);
+  font-size:14px;
+  line-height:1.5;
+  text-align:center;
+  padding:24px;
+}
+.masked-preview-img{
+  width:100%;
+  height:100%;
+  display:none;
+  object-fit:contain;
+  background:#000;
+}
 .controls{
   padding:18px;
   position:sticky;

@@ -101,9 +101,35 @@ body{
   border-radius:12px;
 }
 
-.card-shell{ padding:16px; width:fit-content; }
+.card-shell{ padding:16px; width:fit-content; position:relative; }
 .hint,.generate-hint,.preset-title,.phrase-settings,.notes,.copied-preview-title{ color:var(--muted); font-size:12px; line-height:1.4; }
 .generate-wrap,.preset-wrap,.copied-preview-wrap{ padding:14px 16px; display:grid; gap:10px; }
+.masked-preview-stage{
+  position:absolute;
+  inset:16px;
+  border-radius:14px;
+  background:#000;
+  z-index:10000;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.masked-preview-empty{
+  color:rgba(255,255,255,.42);
+  font-size:14px;
+  line-height:1.5;
+  text-align:center;
+  padding:24px;
+}
+.masked-preview-img{
+  width:100%;
+  height:100%;
+  display:none;
+  object-fit:contain;
+  background:#000;
+}
 .controls{
   padding:18px;
   position:sticky;
@@ -608,7 +634,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t26070105</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t26070106</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -666,15 +692,19 @@ button.secondary{ background:#0c1220; }
               </div>
             </div>
           </div>
+          <div class="masked-preview-stage" data-html2canvas-ignore="true">
+            <div id="maskedPreviewEmpty" class="masked-preview-empty">프리셋0을 누르면 여기에 크롭 미리보기가 표시됩니다.</div>
+            <img id="croppedPreviewImg" class="masked-preview-img" alt="cropped preview" />
+          </div>
         </div>
         <div class="hint">C는 DOM 기반 렌더링 후 캡처하는 방식입니다. A/B는 그대로 유지됩니다.</div>
         <div class="hint">복사가 안 되면 브라우저 보안 정책 때문일 수 있어요. 권장: 로컬 서버로 열기(예: <code>python -m http.server 8000 --directory c:\trae</code>)</div>
         <div class="generate-wrap">
-          <button id="btnGenerate" class="primary" type="button">생성</button>
+          <button id="btnGenerate" class="primary" type="button">프리셋0</button>
           <div id="warningNotice" class="warning-notice">
             <span class="warn-long">LONG</span> / <span class="warn-short">SHORT</span> <span class="warn-text">확인요망</span>
           </div>
-          <div class="generate-hint">생성 버튼을 누르세요.</div>
+          <div class="generate-hint">프리셋0 버튼을 누르면 검은 박스 위에 크롭 미리보기가 뜨고 복사됩니다.</div>
         </div>
       </div>
 
@@ -786,10 +816,6 @@ button.secondary{ background:#0c1220; }
       </div>
 
       <div class="sidepanel">
-        <div class="copied-preview-wrap">
-          <div class="copied-preview-title">캡쳐 이미지 미리보기</div>
-          <img id="croppedPreviewImg" class="copied-preview-img" alt="cropped preview" />
-        </div>
         <div class="detail-control-wrap">
           <div class="detail-control-title">텍스트 & 뱃지 세부 조정 (Navigator)</div>
           <div class="detail-control-layout">
@@ -876,6 +902,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="./app.js?v=t26070105"></script>
+    <script src="./app.js?v=t26070106"></script>
   </body>
 </html>

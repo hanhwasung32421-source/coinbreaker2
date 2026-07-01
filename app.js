@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070105";
+  const BUILD_VERSION = "t26070106";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -33,6 +33,7 @@
     toast: document.getElementById("toast"),
     centerTip: document.getElementById("centerTip"),
     croppedPreviewImg: document.getElementById("croppedPreviewImg"),
+    maskedPreviewEmpty: document.getElementById("maskedPreviewEmpty"),
 
     percentMin: document.getElementById("inpPercentMin"),
     percentMax: document.getElementById("inpPercentMax"),
@@ -1064,6 +1065,16 @@
     if (lastCroppedPreviewUrl) URL.revokeObjectURL(lastCroppedPreviewUrl);
     lastCroppedPreviewUrl = URL.createObjectURL(blob);
     els.croppedPreviewImg.src = lastCroppedPreviewUrl;
+    els.croppedPreviewImg.style.display = "block";
+    if (els.maskedPreviewEmpty) els.maskedPreviewEmpty.style.display = "none";
+  }
+
+  function initMaskedPreview() {
+    if (els.croppedPreviewImg) {
+      els.croppedPreviewImg.removeAttribute("src");
+      els.croppedPreviewImg.style.display = "none";
+    }
+    if (els.maskedPreviewEmpty) els.maskedPreviewEmpty.style.display = "block";
   }
 
   function ensureClipboardWritable() {
@@ -1116,12 +1127,15 @@
       }
       throw lastErr || new Error("capture_failed");
     })();
+    const previewPromise = blobPromise.then((blob) => {
+      updateCroppedPreview(blob);
+      return blob;
+    });
 
     // clipboard.write()를 최대한 클릭 제스처에 붙여서 호출
     tryFocusDocument();
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
-    const blob = await blobPromise;
-    updateCroppedPreview(blob);
+    await previewPromise;
     return true;
   }
 
@@ -1135,9 +1149,10 @@
       if (!ctx) return;
 
       try {
-        // 마지막으로 누른 프리셋을 그대로 재실행
-        if (els.profitMin && ctx.pmin != null) els.profitMin.value = String(ctx.pmin);
-        if (els.profitMax && ctx.pmax != null) els.profitMax.value = String(ctx.pmax);
+        if (ctx.kind !== "preset0") {
+          if (els.profitMin && ctx.pmin != null) els.profitMin.value = String(ctx.pmin);
+          if (els.profitMax && ctx.pmax != null) els.profitMax.value = String(ctx.pmax);
+        }
         doGenerate();
         await copyPresetToClipboardWithRetries({ maxAttempts: 6 });
         showToast("클립보드에 복사됨");
@@ -1255,6 +1270,27 @@
     renderAll();
   }
 
+  async function runPreset0Action() {
+    lastPresetRetryCtx = { kind: "preset0" };
+    doGenerate();
+
+    const now = Date.now();
+    const sideSelected = ["LONG", "SHORT"].includes(String(els.side?.value || "").toUpperCase());
+    const sideOk = sideSelected && now - getTs(LS_SIDE_TS) < ONE_HOUR_MS;
+    const entryOk = getTs(LS_ENTRY_TS) > 0 && now - getTs(LS_ENTRY_TS) < ONE_HOUR_MS;
+    if (!sideSelected) showCenterTip("롱/숏 확인하세요", 1000);
+    else if (!sideOk || !entryOk) showToastFor("롱/숏·진입가 확인하세요", 2000);
+
+    try {
+      await copyPresetToClipboardWithRetries({ maxAttempts: 6 });
+      showToast("클립보드에 복사됨");
+    } catch (e) {
+      console.error(e);
+      showToastFor(getClipboardFailureMessage(e), 2500);
+      armPresetRetryOnNextGesture();
+    }
+  }
+
   function bindPhraseUi() {
     fillPhraseUiFromCfg();
     const onEdit = () => {
@@ -1325,7 +1361,7 @@
     }
     if (els.cloudLoad) els.cloudLoad.addEventListener("click", cloudLoad);
     if (els.cloudSave) els.cloudSave.addEventListener("click", cloudSaveNow);
-    if (els.generate) els.generate.addEventListener("click", doGenerate);
+    if (els.generate) els.generate.addEventListener("click", runPreset0Action);
     if (els.downloadZip) els.downloadZip.addEventListener("click", downloadZip);
     if (els.reroll) {
       els.reroll.addEventListener("click", () => {
@@ -1425,7 +1461,7 @@
         if (els.profitMin && pmin != null) els.profitMin.value = String(pmin);
         if (els.profitMax && pmax != null) els.profitMax.value = String(pmax);
 
-        lastPresetRetryCtx = { presetId, pmin, pmax };
+        lastPresetRetryCtx = { kind: "preset", presetId, pmin, pmax };
         doGenerate();
         const percentForPhrase = generatedItems?.[0]?.percent ?? samplePercent ?? 0;
         let phrase = "";
@@ -2177,6 +2213,7 @@
   }
 
   async function init() {
+    initMaskedPreview();
     bindPhraseUi();
     bindCropUi();
     bind();

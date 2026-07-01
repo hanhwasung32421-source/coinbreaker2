@@ -6,7 +6,7 @@
     <title>Coin Breaker (Maker)</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
     <!-- fallback 스타일(메인 CSS 주입 성공 시 자동 비활성화) -->
-    <link id="fallbackCss" rel="stylesheet" href="../style.css?v=t26070105" />
+    <link id="fallbackCss" rel="stylesheet" href="../style.css?v=t26070106" />
     <!-- 메인(index.html)과 동일한 렌더링 CSS를 그대로 주입 -->
     <script>
       (async () => {
@@ -39,7 +39,7 @@
   <body>
     <div class="topbar">
       <div class="topbar-left">Coin Breaker</div>
-      <div class="topbar-right">버전 <span id="buildVersion">t26070105</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t26070106</span></div>
     </div>
 
     <div class="app">
@@ -116,14 +116,18 @@
               </div>
             </div>
           </div>
+          <div class="masked-preview-stage" data-html2canvas-ignore="true">
+            <div id="maskedPreviewEmpty" class="masked-preview-empty">프리셋0을 누르면 여기에 크롭 미리보기가 표시됩니다.</div>
+            <img id="croppedPreviewImg" class="masked-preview-img" alt="cropped preview" />
+          </div>
         </div>
 
         <div class="generate-wrap">
-          <button id="btnGenerate" class="primary" type="button">생성</button>
+          <button id="btnGenerate" class="primary" type="button">프리셋0</button>
           <div id="warningNotice" class="warning-notice">
             <span class="warn-long">LONG</span> / <span class="warn-short">SHORT</span> <span class="warn-text">확인요망</span>
           </div>
-          <div class="generate-hint">생성 버튼을 누르세요.</div>
+          <div class="generate-hint">프리셋0 버튼을 누르면 검은 박스 위에 크롭 미리보기가 뜨고 복사됩니다.</div>
         </div>
       </div>
 
@@ -206,6 +210,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t26070105"></script>
+    <script src="../app.js?v=t26070106"></script>
   </body>
 </html>
