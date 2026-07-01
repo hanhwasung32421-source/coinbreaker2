@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070107";
+  const BUILD_VERSION = "t26070108";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -161,14 +161,12 @@
       { x: 0, y: 0, w: 1, h: 1 };
     const profitRect = getRectForSelectors(["#txtProfit"]) || getRectForSelector("#txtProfit") || percentRect;
     const exitRect = getRectForSelector("#txtExit") || profitRect;
-    const requiredRect = rectUnion(percentRect, profitRect);
 
     const startPadXMax = Math.max(0, Math.round(cropCfg?.startPadXMax ?? DEFAULT_CROP_CFG.startPadXMax));
     const startPadYMax = Math.max(0, Math.round(cropCfg?.startPadYMax ?? DEFAULT_CROP_CFG.startPadYMax));
     const x = Math.max(0, Math.floor(percentRect.x - Math.round(startPadXMax / 2)));
     const y = Math.max(0, Math.floor(percentRect.y - Math.round(startPadYMax / 2)));
 
-    const requiredRight = Math.ceil(requiredRect.x + requiredRect.w);
     const widthMinRatio = clamp((cropCfg?.widthMinPct ?? DEFAULT_CROP_CFG.widthMinPct) / 100, 0.01, 1);
     const widthMaxRatio = clamp((cropCfg?.widthMaxPct ?? DEFAULT_CROP_CFG.widthMaxPct) / 100, widthMinRatio, 1);
 
@@ -176,10 +174,6 @@
     let maxW = Math.round(widthMaxRatio * W);
     minW = Math.max(1, Math.min(W - x, minW));
     maxW = Math.max(1, Math.min(W - x, maxW));
-
-    // 텍스트(퍼센트+수익금)가 잘리지 않게 자동 보정되는 최소 폭
-    const minAllowed = Math.min(W - x, Math.max(minW, requiredRight - x));
-    const maxAllowed = Math.min(W - x, Math.max(maxW, requiredRight - x));
 
     const padBottomMin = Math.max(0, Math.round(cropCfg?.bottomPadMin ?? DEFAULT_CROP_CFG.bottomPadMin));
     const padBottomMax = Math.max(padBottomMin, Math.round(cropCfg?.bottomPadMax ?? DEFAULT_CROP_CFG.bottomPadMax));
@@ -191,7 +185,7 @@
     const hi = Math.max(lo, Math.min(H - y, Math.max(minH, maxH)));
     const sampleH = Math.round((lo + hi) / 2);
 
-    return { W, H, x, y, minW: minAllowed, maxW: maxAllowed, h: sampleH };
+    return { W, H, x, y, minW, maxW, h: sampleH };
   }
 
   function updateCropGuideUi() {
@@ -208,7 +202,7 @@
       const minPct = Math.round((bounds.minW / bounds.W) * 100);
       const maxPct = Math.round((bounds.maxW / bounds.W) * 100);
       summary.textContent =
-        `가로(좌우) 실제 크롭 범위: 약 ${minPct}% ~ ${maxPct}% (오른쪽이 잘림).`;
+        `가로(좌우) 설정 범위: ${minPct}% ~ ${maxPct}% (오른쪽이 잘림).`;
     }
   }
 
@@ -969,22 +963,17 @@
     const profitRect = getRectForSelectors(["#txtProfit"]) || getRectForSelector("#txtProfit") || percentRect;
     const exitRect = getRectForSelector("#txtExit") || profitRect;
 
-    // "무조건 포함" 영역(수익퍼센트 + 수익금액)
-    const requiredRect = rectUnion(percentRect, profitRect);
-
-    // 시작점: 퍼센트 왼쪽 위 기준으로 랜덤 (단, requiredRect를 포함하기 쉬운 범위로 제한)
+    // 시작점: 퍼센트 왼쪽 위 기준으로 랜덤
     const startPadX = randInt(0, Math.max(0, Math.round(cropCfg?.startPadXMax ?? DEFAULT_CROP_CFG.startPadXMax)));
     const startPadY = randInt(0, Math.max(0, Math.round(cropCfg?.startPadYMax ?? DEFAULT_CROP_CFG.startPadYMax)));
     let x = Math.max(0, Math.floor(percentRect.x - startPadX));
     let y = Math.max(0, Math.floor(percentRect.y - startPadY));
 
-    // 가로: 설정 비율 범위에서 랜덤, 단 텍스트(퍼센트+수익금)는 절대 잘리면 안 됨
-    const requiredRight = Math.ceil(requiredRect.x + requiredRect.w);
+    // 가로: 설정 비율 범위에서 랜덤. 텍스트 보호 자동 보정은 하지 않음.
     const widthMinRatio = clamp((cropCfg?.widthMinPct ?? DEFAULT_CROP_CFG.widthMinPct) / 100, 0.01, 1);
     const widthMaxRatio = clamp((cropCfg?.widthMaxPct ?? DEFAULT_CROP_CFG.widthMaxPct) / 100, widthMinRatio, 1);
     let w = Math.round(randFloat(widthMinRatio, widthMaxRatio) * W);
     w = Math.max(1, Math.min(W - x, w));
-    if (x + w < requiredRight) w = Math.min(W - x, requiredRight - x);
 
     // 세로: 최소는 "수익금액이 보이는 최소 범위"(profit bottom 포함),
     // 최대는 "종료가격 숫자가 보이는 곳까지"(exit bottom 포함)
@@ -1001,71 +990,7 @@
     const hi = Math.max(lo, Math.min(H - y, Math.max(minH, maxH)));
     let h = randInt(lo, hi);
 
-    // 최종 안전장치: requiredRect(퍼센트+수익금)가 항상 들어오도록 보정
-    // (드물게 폰트/레이아웃 타이밍으로 rect가 흔들려도 캡쳐가 배경만 뜨는 것을 방지)
-    if (x > requiredRect.x) x = Math.max(0, Math.floor(requiredRect.x));
-    if (y > requiredRect.y) y = Math.max(0, Math.floor(requiredRect.y));
-    if (x + w < requiredRect.x + requiredRect.w) w = Math.min(W - x, Math.ceil(requiredRect.x + requiredRect.w - x));
-    if (y + h < requiredRect.y + requiredRect.h) h = Math.min(H - y, Math.ceil(requiredRect.y + requiredRect.h - y));
-
-    // 안전: 필수 요소가 잘리지 않도록 최종 보정
-    const requiredBottom = Math.ceil(profitRect.y + profitRect.h);
-    if (y + h < requiredBottom) {
-      const need = requiredBottom - y;
-      return clampRectToCard({ x, y, w, h: need + randInt(8, 28) }, W, H);
-    }
     return clampRectToCard({ x, y, w, h }, W, H);
-  }
-
-  function hasProfitTextLikePixels(offCtx, cropCss) {
-    // required 영역(퍼센트+수익금) 안에서
-    // - 밝은/초록 픽셀(텍스트)도 있어야 하고
-    // - 어두운 픽셀(배경)도 같이 있어야 정상으로 간주합니다.
-    // (첨부처럼 "초록색 덩어리만" 나오거나 "배경만" 나오는 케이스를 걸러냄)
-    const rr = els.cardRoot.getBoundingClientRect();
-
-    const percentRect =
-      getRectForSelectors(["#txtPercent", "#txtPercentSign"]) ||
-      getRectForSelector("#txtPercent") ||
-      { x: 0, y: 0, w: 1, h: 1 };
-    const profitRect =
-      getRectForSelectors(["#txtProfit"]) ||
-      getRectForSelector("#txtProfit") ||
-      percentRect;
-    const requiredRect = rectUnion(percentRect, profitRect);
-
-    // offCtx는 crop된 이미지(1 CSS px = 1 off canvas px) 이므로,
-    // requiredRect를 crop 기준으로 로컬 좌표로 변환해서 샘플링합니다.
-    const sx = Math.max(0, Math.floor(requiredRect.x - cropCss.x));
-    const sy = Math.max(0, Math.floor(requiredRect.y - cropCss.y));
-    const ex = Math.min(offCtx.canvas.width, Math.ceil(requiredRect.x + requiredRect.w - cropCss.x));
-    const ey = Math.min(offCtx.canvas.height, Math.ceil(requiredRect.y + requiredRect.h - cropCss.y));
-    const w = Math.max(1, ex - sx);
-    const h = Math.max(1, ey - sy);
-
-    const img = offCtx.getImageData(sx, sy, w, h).data;
-    const samples = 420;
-    let darkCnt = 0;
-    let brightOrGreenCnt = 0;
-
-    for (let i = 0; i < samples; i++) {
-      const x = Math.floor(Math.random() * w);
-      const y = Math.floor(Math.random() * h);
-      const idx = (y * w + x) * 4;
-      const r = img[idx], g = img[idx + 1], b = img[idx + 2];
-      const bright = (r + g + b) / 3;
-      const darkish = bright < 45;
-      const brightish = bright > 185;
-      const greenish = g > 150 && g - r > 35 && g - b > 20;
-
-      if (darkish) darkCnt++;
-      if (brightish || greenish) brightOrGreenCnt++;
-      if (darkCnt > 12 && brightOrGreenCnt > 12) return true;
-    }
-
-    // rr unused but kept to ensure rects are computed after layout
-    void rr;
-    return darkCnt > 12 && brightOrGreenCnt > 12;
   }
 
   function hasGreenishText(canvasOrCtx) {
@@ -1126,11 +1051,6 @@
           outW,
           outH
         );
-
-        if (!hasProfitTextLikePixels(offCtx, crop)) {
-          lastErr = new Error("capture_background_only");
-          continue;
-        }
 
         blob = await new Promise((resolve, reject) =>
           off.toBlob((b) => (b ? resolve(b) : reject(new Error("이미지 변환 실패"))), "image/png")
