@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070114";
+  const BUILD_VERSION = "t26070115";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -131,6 +131,13 @@
     bottomPadMax: 36,
   };
   let cropCfg = { ...DEFAULT_CROP_CFG };
+
+  const DEFAULT_PRESET_ENTRY_CFG = (() => {
+    const o = {};
+    for (let i = 1; i <= 10; i++) o[String(i)] = { min: "", max: "" };
+    return o;
+  })();
+  let presetEntryCfg = JSON.parse(JSON.stringify(DEFAULT_PRESET_ENTRY_CFG));
   let presetPart4Assignment = null;
   let presetPart4PoolKey = "";
   let lastPresetRetryCtx = null;
@@ -335,6 +342,16 @@
     return trimTrailingZeroIn5dp(entryIntToText(next));
   }
 
+  function randomEntryInRange(minText, maxText) {
+    const a = parseEntryToInt(minText);
+    const b = parseEntryToInt(maxText);
+    if (a == null || b == null) return null;
+    const lo = Math.min(a, b);
+    const hi = Math.max(a, b);
+    const next = lo === hi ? lo : randInt(lo, hi);
+    return trimTrailingZeroIn5dp(entryIntToText(next));
+  }
+
   function buildRenderItem(baseEntry) {
     const { percent, profit } = randomPercentProfit();
     return { percent, profit, entry: randomEntryFromBase(baseEntry) };
@@ -448,6 +465,62 @@
     };
   }
 
+  function normalizePresetEntryCfg(cfg) {
+    const out = JSON.parse(JSON.stringify(DEFAULT_PRESET_ENTRY_CFG));
+    if (!cfg || typeof cfg !== "object") return out;
+    for (let i = 1; i <= 10; i++) {
+      const k = String(i);
+      const v = cfg[k];
+      if (!v || typeof v !== "object") continue;
+      out[k] = {
+        min: String(v.min ?? "").trim(),
+        max: String(v.max ?? "").trim(),
+      };
+    }
+    return out;
+  }
+
+  function fillPresetEntryUiFromCfg() {
+    for (let i = 1; i <= 10; i++) {
+      const k = String(i);
+      const minEl = document.getElementById(`inpPresetEntryMin${k}`);
+      const maxEl = document.getElementById(`inpPresetEntryMax${k}`);
+      if (minEl) minEl.value = String(presetEntryCfg?.[k]?.min ?? "");
+      if (maxEl) maxEl.value = String(presetEntryCfg?.[k]?.max ?? "");
+    }
+  }
+
+  function readPresetEntryCfgFromUi() {
+    const out = JSON.parse(JSON.stringify(DEFAULT_PRESET_ENTRY_CFG));
+    for (let i = 1; i <= 10; i++) {
+      const k = String(i);
+      const minEl = document.getElementById(`inpPresetEntryMin${k}`);
+      const maxEl = document.getElementById(`inpPresetEntryMax${k}`);
+      const min = minEl ? String(minEl.value ?? "").trim() : "";
+      const max = maxEl ? String(maxEl.value ?? "").trim() : "";
+      out[k] = { min, max };
+    }
+    return out;
+  }
+
+  function bindPresetEntryUi() {
+    const onEdit = () => {
+      presetEntryCfg = readPresetEntryCfgFromUi();
+      scheduleCloudSave();
+    };
+    for (let i = 1; i <= 10; i++) {
+      const k = String(i);
+      const minEl = document.getElementById(`inpPresetEntryMin${k}`);
+      const maxEl = document.getElementById(`inpPresetEntryMax${k}`);
+      [minEl, maxEl].forEach((el) => {
+        if (!el) return;
+        el.addEventListener("input", onEdit);
+        el.addEventListener("change", onEdit);
+      });
+    }
+    fillPresetEntryUiFromCfg();
+  }
+
   function getPart4ListAll(cfg) {
     const arr = Array.isArray(cfg?.part4) ? cfg.part4 : [];
     return arr.map((v) => String(v ?? "").trim());
@@ -527,6 +600,7 @@
       },
       phraseCfg,
       cropCfg,
+      presetEntryCfg,
       cardCustomStyles,
     };
   }
@@ -595,8 +669,11 @@
     } else {
       cropCfg = { ...DEFAULT_CROP_CFG };
     }
+
+    presetEntryCfg = normalizePresetEntryCfg(state.presetEntryCfg);
     fillPhraseUiFromCfg();
     fillCropUiFromCfg();
+    fillPresetEntryUiFromCfg();
     syncBgShiftInputs();
     syncOverlayUi();
     applyOverlayToDom();
@@ -1469,6 +1546,17 @@
         if (els.profitMin && pmin != null) els.profitMin.value = String(pmin);
         if (els.profitMax && pmax != null) els.profitMax.value = String(pmax);
 
+        // 프리셋별 진입가 범위가 설정되어 있으면, 범위 내에서 랜덤 진입가를 적용
+        const ec = presetId != null ? presetEntryCfg?.[String(presetId)] : null;
+        if (els.entry && ec && ec.min && ec.max) {
+          const nextEntry = randomEntryInRange(ec.min, ec.max);
+          if (nextEntry != null) {
+            els.entry.value = nextEntry;
+            setTs(LS_ENTRY_TS);
+            scheduleCloudSave();
+          }
+        }
+
         lastPresetRetryCtx = { kind: "preset", presetId, pmin, pmax };
         doGenerate();
         const percentForPhrase = generatedItems?.[0]?.percent ?? samplePercent ?? 0;
@@ -2223,6 +2311,7 @@
   async function init() {
     initMaskedPreview();
     bindPhraseUi();
+    bindPresetEntryUi();
     bindCropUi();
     bind();
     bindSideUi();
