@@ -77,7 +77,7 @@ body{
 
 .app{
   display:grid;
-  grid-template-columns: 520px 600px minmax(340px, 1fr);
+  grid-template-columns: 520px 600px;
   justify-content:start;
   gap:24px;
   padding:24px;
@@ -634,7 +634,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t26070109</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t26070110</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -815,86 +815,7 @@ button.secondary{ background:#0c1220; }
         </div>
       </div>
 
-      <div class="sidepanel">
-        <div class="detail-control-wrap">
-          <div class="detail-control-title">텍스트 & 뱃지 세부 조정 (Navigator)</div>
-          <div class="detail-control-layout">
-            <div class="control-left">
-              <label class="nav-select-row">조절 대상 선택
-                <select id="selNavTarget" class="nav-select">
-                  <option value=".dgb-title">로고 (futuresusdt)</option>
-                  <option value="#txtPercent">수익률 (%)</option>
-                  <option value="#txtProfit">수익금 (원)</option>
-                  <option value=".dgb-grid-item:nth-child(1) .dgb-grid-label">코인 라벨</option>
-                  <option value="#txtSymbol">코인명 (DOGEUSDT)</option>
-                  <option value="#txtSide">롱/숏 뱃지</option>
-                  <option value=".dgb-grid-item:nth-child(2) .dgb-grid-label">레버리지 라벨</option>
-                  <option value="#txtLeverage">레버리지 값</option>
-                  <option value=".dgb-grid-item:nth-child(3) .dgb-grid-label">진입가격 라벨</option>
-                  <option value="#txtEntry">진입가격 값</option>
-                  <option value=".dgb-grid-item:nth-child(4) .dgb-grid-label">종료가격 라벨</option>
-                  <option value="#txtExit">종료가격 값</option>
-                  <option value=".dgb-close-btn">우측 상단 X</option>
-                </select>
-              </label>
-              <label class="txt-content-row" style="margin-top: 10px; display: block;">텍스트 내용 수정
-                <input type="text" id="inpNavText" placeholder="내용 직접 입력" style="width:100%; margin-top:4px;" />
-              </label>
-              <label class="kb-control-row" style="margin-top: 12px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); cursor: pointer;">
-                <input type="checkbox" id="chkKbControl" style="margin: 0; cursor: pointer;" /> 키보드 단축키 조작 활성화
-              </label>
-            </div>
-            <div class="control-right">
-              <div class="control-section">
-                <span class="section-label">위치 이동 (상하좌우)</span>
-                <div class="nav-pad">
-                  <button type="button" id="btnNavUp" class="secondary">▲</button>
-                  <div class="nav-pad-middle">
-                    <button type="button" id="btnNavLeft" class="secondary">◀</button>
-                    <button type="button" id="btnNavReset" class="secondary">↺</button>
-                    <button type="button" id="btnNavRight" class="secondary">▶</button>
-                  </div>
-                  <button type="button" id="btnNavDown" class="secondary">▼</button>
-                </div>
-                <div class="step-row">
-                  <span>이동 간격:</span>
-                  <input type="number" id="numNavStep" value="1" min="1" max="50" style="width:50px; text-align:center;" /> px
-                </div>
-              </div>
-              
-              <div class="control-section">
-                <span class="section-label">크기 조절</span>
-                <div class="btn-group">
-                  <button type="button" id="btnNavSizeDown" class="secondary">크기 -</button>
-                  <button type="button" id="btnNavSizeUp" class="secondary">크기 +</button>
-                </div>
-              </div>
-
-              <div class="control-section">
-                <span class="section-label">글씨 굵기</span>
-                <div class="btn-group">
-                  <button type="button" id="btnNavWeightLighter" class="secondary">연하게</button>
-                  <button type="button" id="btnNavWeightBolder" class="secondary">진하게</button>
-                </div>
-              </div>
-
-              <div class="control-section">
-                <span class="section-label">색상 & 폰트</span>
-                <div class="color-font-row">
-                  <input type="color" id="clrNavColor" value="#ffffff" style="margin-right: 4px;" />
-                  <select id="selNavFont">
-                    <option value="inherit">기본 폰트</option>
-                    <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
-                    <option value="Inter, sans-serif">Inter</option>
-                    <option value="Roboto, sans-serif">Roboto</option>
-                    <option value="Arial, sans-serif">Arial</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- 메인 페이지의 텍스트/뱃지 세부 조정(Navigator)은 컨트롤 페이지에서만 관리합니다. -->
     </div>
 
     <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
@@ -902,6 +823,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="./app.js?v=t26070109"></script>
+    <script src="./app.js?v=t26070110"></script>
   </body>
 </html>
