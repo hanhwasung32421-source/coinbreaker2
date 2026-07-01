@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070104";
+  const BUILD_VERSION = "t26070105";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -132,6 +132,8 @@
   let cropCfg = { ...DEFAULT_CROP_CFG };
   let presetPart4Assignment = null;
   let presetPart4PoolKey = "";
+  let lastPresetRetryCtx = null;
+  let presetRetryArmed = false;
 
   function showToast(message) {
     if (!els.toast) return;
@@ -1084,13 +1086,71 @@
     if (msg.includes("clipboard_insecure_context")) return "클립보드는 HTTPS 또는 localhost에서만 이미지 복사가 가능합니다.";
     if (msg.includes("clipboard_not_supported")) return "현재 브라우저가 이미지 클립보드 복사를 지원하지 않습니다.";
     if (msg.includes("not focused") || msg.includes("Document is not focused")) {
-      return "브라우저 창 포커스가 없어 클립보드 복사가 차단됐습니다. 실사용 페이지에서는 클릭 직후 바로 복사되도록 수정했습니다.";
+      return "브라우저 창 포커스가 없어 클립보드 복사가 차단됐습니다. 화면을 한 번 클릭하면 자동으로 다시 시도합니다.";
     }
     if (msg.includes("NotAllowedError") || msg.includes("permission") || msg.includes("denied")) {
-      return "브라우저가 클립보드 권한을 막았거나 클릭 제스처가 끊겨 복사가 차단됐습니다.";
+      return "브라우저가 클립보드 권한을 막았습니다. 화면을 한 번 클릭하면 자동으로 다시 시도합니다.";
     }
-    if (msg.includes("capture_")) return "이미지 캡처 중 문제가 생겨 클립보드 복사를 완료하지 못했습니다.";
-    return "클립보드 복사에 실패했습니다.";
+    return "클립보드 복사에 실패했습니다. 화면을 한 번 클릭하면 자동으로 다시 시도합니다.";
+  }
+
+  async function copyPresetToClipboardWithRetries({ maxAttempts = 6 } = {}) {
+    ensureClipboardWritable();
+    tryFocusDocument();
+
+    // 사용자 제스처(프리셋 클릭)를 유지하기 위해, ClipboardItem에 Promise(blob)를 직접 넘깁니다.
+    // Promise 내부에서 캡처 실패 시 재생성(doGenerate) 후 재시도해서 "캡처 실패"가 사용자에게 튀지 않게 합니다.
+    const blobPromise = (async () => {
+      let lastErr = null;
+      for (let i = 0; i < maxAttempts; i++) {
+        try {
+          // DOM 업데이트 반영
+          await new Promise((r) => requestAnimationFrame(() => r()));
+          const blob = await buildCapturedBlob();
+          return blob;
+        } catch (e) {
+          lastErr = e;
+          // 캡처가 흔들리는 경우(폰트/레이아웃/크롭 휴리스틱) 새로 생성해서 재시도
+          try { doGenerate(); } catch {}
+        }
+      }
+      throw lastErr || new Error("capture_failed");
+    })();
+
+    // clipboard.write()를 최대한 클릭 제스처에 붙여서 호출
+    tryFocusDocument();
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
+    const blob = await blobPromise;
+    updateCroppedPreview(blob);
+    return true;
+  }
+
+  function armPresetRetryOnNextGesture() {
+    if (presetRetryArmed || !lastPresetRetryCtx) return;
+    presetRetryArmed = true;
+
+    const onNextGesture = async () => {
+      presetRetryArmed = false;
+      const ctx = lastPresetRetryCtx;
+      if (!ctx) return;
+
+      try {
+        // 마지막으로 누른 프리셋을 그대로 재실행
+        if (els.profitMin && ctx.pmin != null) els.profitMin.value = String(ctx.pmin);
+        if (els.profitMax && ctx.pmax != null) els.profitMax.value = String(ctx.pmax);
+        doGenerate();
+        await copyPresetToClipboardWithRetries({ maxAttempts: 6 });
+        showToast("클립보드에 복사됨");
+      } catch (e) {
+        console.error(e);
+        showToastFor(getClipboardFailureMessage(e), 2500);
+        // 또 실패하면 다시 다음 제스처에서 재시도
+        armPresetRetryOnNextGesture();
+      }
+    };
+
+    // "사용자 제스처"가 되는 이벤트에서만 재시도해야 클립보드가 풀립니다.
+    document.addEventListener("pointerdown", onNextGesture, { once: true, capture: true });
   }
 
   async function copyCardToClipboardAndPreview(options = {}) {
@@ -1365,6 +1425,7 @@
         if (els.profitMin && pmin != null) els.profitMin.value = String(pmin);
         if (els.profitMax && pmax != null) els.profitMax.value = String(pmax);
 
+        lastPresetRetryCtx = { presetId, pmin, pmax };
         doGenerate();
         const percentForPhrase = generatedItems?.[0]?.percent ?? samplePercent ?? 0;
         let phrase = "";
@@ -1396,16 +1457,13 @@
         else if (!sideOk || !entryOk) showToastFor("롱/숏·진입가 확인하세요", 2000);
 
         try {
-          await copyCardToClipboardAndPreview({ preserveGesture: true, allowDownloadFallback: false });
+          await copyPresetToClipboardWithRetries({ maxAttempts: 6 });
           showToast("클립보드에 복사됨");
         } catch (e) {
           console.error(e);
-          const msg = String(e?.message || "");
-          if (msg.includes("html2canvas_missing")) {
-            showToastFor("캡처 라이브러리 로딩 실패(html2canvas). 네트워크/차단 여부 확인", 3000);
-          } else {
-            showToastFor(getClipboardFailureMessage(e), 3000);
-          }
+          // 실패하면 다음 사용자 제스처(클릭)에서 자동으로 다시 시도
+          showToastFor(getClipboardFailureMessage(e), 2500);
+          armPresetRetryOnNextGesture();
         }
       });
     });
