@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070103";
+  const BUILD_VERSION = "t26070104";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -1003,7 +1003,7 @@
     return false;
   }
 
-  async function copyCardToClipboardAndPreview() {
+  async function buildCapturedBlob() {
     let blob = null;
     let lastErr = null;
 
@@ -1040,8 +1040,6 @@
           outH
         );
 
-        // required(퍼센트+수익금) 영역에 "텍스트 + 배경"이 같이 있는지 검사
-        // 실패하면 재시도(환경별 텍스트 누락/좌표 미스 대비)
         if (!hasProfitTextLikePixels(offCtx, crop)) {
           lastErr = new Error("capture_background_only");
           continue;
@@ -1056,28 +1054,80 @@
       }
     }
     if (!blob) throw lastErr || new Error("capture_failed");
+    return blob;
+  }
 
-    if (els.croppedPreviewImg) {
-      if (lastCroppedPreviewUrl) URL.revokeObjectURL(lastCroppedPreviewUrl);
-      lastCroppedPreviewUrl = URL.createObjectURL(blob);
-      els.croppedPreviewImg.src = lastCroppedPreviewUrl;
+  function updateCroppedPreview(blob) {
+    if (!blob || !els.croppedPreviewImg) return;
+    if (lastCroppedPreviewUrl) URL.revokeObjectURL(lastCroppedPreviewUrl);
+    lastCroppedPreviewUrl = URL.createObjectURL(blob);
+    els.croppedPreviewImg.src = lastCroppedPreviewUrl;
+  }
+
+  function ensureClipboardWritable() {
+    if (!window.isSecureContext || location.protocol === "file:") {
+      throw new Error("clipboard_insecure_context");
     }
+    if (!navigator.clipboard || typeof navigator.clipboard.write !== "function" || typeof ClipboardItem === "undefined") {
+      throw new Error("clipboard_not_supported");
+    }
+  }
 
+  function tryFocusDocument() {
+    try { window.focus?.(); } catch {}
+    try { document.body?.focus?.({ preventScroll: true }); } catch {}
+    try { document.documentElement?.focus?.({ preventScroll: true }); } catch {}
+  }
 
-    // 클립보드 복사는 브라우저 보안 정책(HTTPS/localhost)에서만 동작할 수 있음.
-    // 실패하면 다운로드로 대체해 "복사 불가" 상황에서도 결과는 얻을 수 있게 함.
+  function getClipboardFailureMessage(err) {
+    const msg = String(err?.message || err || "");
+    if (msg.includes("clipboard_insecure_context")) return "클립보드는 HTTPS 또는 localhost에서만 이미지 복사가 가능합니다.";
+    if (msg.includes("clipboard_not_supported")) return "현재 브라우저가 이미지 클립보드 복사를 지원하지 않습니다.";
+    if (msg.includes("not focused") || msg.includes("Document is not focused")) {
+      return "브라우저 창 포커스가 없어 클립보드 복사가 차단됐습니다. 실사용 페이지에서는 클릭 직후 바로 복사되도록 수정했습니다.";
+    }
+    if (msg.includes("NotAllowedError") || msg.includes("permission") || msg.includes("denied")) {
+      return "브라우저가 클립보드 권한을 막았거나 클릭 제스처가 끊겨 복사가 차단됐습니다.";
+    }
+    if (msg.includes("capture_")) return "이미지 캡처 중 문제가 생겨 클립보드 복사를 완료하지 못했습니다.";
+    return "클립보드 복사에 실패했습니다.";
+  }
+
+  async function copyCardToClipboardAndPreview(options = {}) {
+    const { preserveGesture = false, allowDownloadFallback = true } = options;
+    ensureClipboardWritable();
+    tryFocusDocument();
+    const blobPromise = buildCapturedBlob();
+
     try {
-      if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
-        throw new Error("clipboard_not_supported");
+      if (preserveGesture) {
+        tryFocusDocument();
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "image/png": blobPromise,
+          }),
+        ]);
+        const blob = await blobPromise;
+        updateCroppedPreview(blob);
+        return blob;
       }
+
+      const blob = await blobPromise;
+      updateCroppedPreview(blob);
+      tryFocusDocument();
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      return blob;
     } catch (e) {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "cropped.png";
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-      throw new Error("clipboard_failed_downloaded");
+      const blob = await blobPromise.catch(() => null);
+      if (blob) updateCroppedPreview(blob);
+      if (allowDownloadFallback && blob) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "cropped.png";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      }
+      throw e;
     }
   }
 
@@ -1346,18 +1396,15 @@
         else if (!sideOk || !entryOk) showToastFor("롱/숏·진입가 확인하세요", 2000);
 
         try {
-          await copyCardToClipboardAndPreview();
+          await copyCardToClipboardAndPreview({ preserveGesture: true, allowDownloadFallback: false });
           showToast("클립보드에 복사됨");
         } catch (e) {
           console.error(e);
-          // copyCardToClipboardAndPreview()에서 실패 시 다운로드로 대체됨
           const msg = String(e?.message || "");
           if (msg.includes("html2canvas_missing")) {
             showToastFor("캡처 라이브러리 로딩 실패(html2canvas). 네트워크/차단 여부 확인", 3000);
-          } else if (!window.isSecureContext || location.protocol === "file:") {
-            showToastFor("파일로 열면(또는 비보안 환경) 캡처/복사가 제한될 수 있어요. localhost/HTTPS로 실행 권장", 3500);
           } else {
-            showToastFor("클립보드 복사 실패 → 파일로 저장됨(권장: localhost/HTTPS로 실행)", 2500);
+            showToastFor(getClipboardFailureMessage(e), 3000);
           }
         }
       });
