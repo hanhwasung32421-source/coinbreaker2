@@ -177,6 +177,9 @@ button.secondary{ background:#0c1220; }
 .bg-move{ display:grid; gap:8px; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.08); background:#0c1220; }
 .bg-move-row{ justify-content:center; }
 .bg-shift-inputs,.cloud-actions,.phrase-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.preset-profit-grid{ display:grid; gap:10px; }
+.preset-profit-row{ display:grid; grid-template-columns: 120px 1fr 1fr; gap:10px; align-items:center; }
+.preset-profit-name{ color:rgba(231,238,252,.92); font-size:12px; }
 .span-2{ grid-column:1 / -1; }
 .preset-grid{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
 .preset-btn{ width:100%; white-space:nowrap; }
@@ -634,7 +637,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t26070115</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t26070116</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -762,71 +765,61 @@ button.secondary{ background:#0c1220; }
           </details>
 
           <details class="phrase-settings">
-            <summary>프리셋 가격(진입가) 범위 설정</summary>
+            <summary>프리셋 수익금 범위 설정</summary>
             <div class="phrase-help">
-              프리셋1~10을 누를 때 <b>진입가</b>를 아래 범위에서 랜덤으로 설정합니다. (비우면 기존 진입가를 유지)
+              프리셋1~10을 누를 때 <b>수익금(만원)</b> 범위를 아래 값으로 자동 적용합니다.
             </div>
-            <div class="phrase-grid">
-              <label class="span-2">프리셋1 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin1" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax1" type="text" placeholder="최대" />
-                </div>
-              </label>
-              <label class="span-2">프리셋2 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin2" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax2" type="text" placeholder="최대" />
-                </div>
-              </label>
-              <label class="span-2">프리셋3 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin3" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax3" type="text" placeholder="최대" />
-                </div>
-              </label>
-              <label class="span-2">프리셋4 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin4" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax4" type="text" placeholder="최대" />
-                </div>
-              </label>
-              <label class="span-2">프리셋5 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin5" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax5" type="text" placeholder="최대" />
-                </div>
-              </label>
-              <label class="span-2">프리셋6 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin6" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax6" type="text" placeholder="최대" />
-                </div>
-              </label>
-              <label class="span-2">프리셋7 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin7" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax7" type="text" placeholder="최대" />
-                </div>
-              </label>
-              <label class="span-2">프리셋8 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin8" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax8" type="text" placeholder="최대" />
-                </div>
-              </label>
-              <label class="span-2">프리셋9 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin9" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax9" type="text" placeholder="최대" />
-                </div>
-              </label>
-              <label class="span-2">프리셋10 진입가 범위
-                <div class="dual-input">
-                  <input id="inpPresetEntryMin10" type="text" placeholder="최소" />
-                  <input id="inpPresetEntryMax10" type="text" placeholder="최대" />
-                </div>
-              </label>
+            <div class="preset-profit-grid">
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋1 수익금</div>
+                <input id="inpPresetProfitMin1" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax1" type="text" placeholder="최대" />
+              </div>
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋2 수익금</div>
+                <input id="inpPresetProfitMin2" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax2" type="text" placeholder="최대" />
+              </div>
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋3 수익금</div>
+                <input id="inpPresetProfitMin3" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax3" type="text" placeholder="최대" />
+              </div>
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋4 수익금</div>
+                <input id="inpPresetProfitMin4" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax4" type="text" placeholder="최대" />
+              </div>
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋5 수익금</div>
+                <input id="inpPresetProfitMin5" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax5" type="text" placeholder="최대" />
+              </div>
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋6 수익금</div>
+                <input id="inpPresetProfitMin6" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax6" type="text" placeholder="최대" />
+              </div>
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋7 수익금</div>
+                <input id="inpPresetProfitMin7" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax7" type="text" placeholder="최대" />
+              </div>
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋8 수익금</div>
+                <input id="inpPresetProfitMin8" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax8" type="text" placeholder="최대" />
+              </div>
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋9 수익금</div>
+                <input id="inpPresetProfitMin9" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax9" type="text" placeholder="최대" />
+              </div>
+              <div class="preset-profit-row">
+                <div class="preset-profit-name">프리셋10 수익금</div>
+                <input id="inpPresetProfitMin10" type="text" placeholder="최소" />
+                <input id="inpPresetProfitMax10" type="text" placeholder="최대" />
+              </div>
             </div>
           </details>
         </div>
@@ -866,6 +859,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="./app.js?v=t26070115"></script>
+    <script src="./app.js?v=t26070116"></script>
   </body>
 </html>

@@ -2,13 +2,20 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070115";
+  const BUILD_VERSION = "t26070116";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5Znljcm1sdHFvc2V6bXN1ZnVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMzg4MDIsImV4cCI6MjA5NTYxNDgwMn0.VpJCBdD1g8YZiaa6Zah9ZKIu3ydu_RkSgWCdEXe2QGw";
   const SUPABASE_TABLE = "coinbreaker_state";
-  const SUPABASE_ROW_ID = "default";
+
+  function getSupabaseRowId() {
+    const p = String(location.pathname || "").toLowerCase();
+    // maker는 메인과 상태를 분리해서 저장합니다.
+    // (메인/컨트롤: main, maker: maker)
+    if (p.includes("/maker/") || p.endsWith("/maker") || p.endsWith("/maker/index.html")) return "maker";
+    return "main";
+  }
 
   const ONE_HOUR_MS = 60 * 60 * 1000;
   const LS_SIDE_TS = "coinbreaker_side_ts";
@@ -132,12 +139,19 @@
   };
   let cropCfg = { ...DEFAULT_CROP_CFG };
 
-  const DEFAULT_PRESET_ENTRY_CFG = (() => {
-    const o = {};
-    for (let i = 1; i <= 10; i++) o[String(i)] = { min: "", max: "" };
-    return o;
-  })();
-  let presetEntryCfg = JSON.parse(JSON.stringify(DEFAULT_PRESET_ENTRY_CFG));
+  const DEFAULT_PRESET_PROFIT_CFG = {
+    "1": { min: "50", max: "100" },
+    "2": { min: "100", max: "200" },
+    "3": { min: "300", max: "400" },
+    "4": { min: "300", max: "400" },
+    "5": { min: "500", max: "700" },
+    "6": { min: "1000", max: "2000" },
+    "7": { min: "1500", max: "2500" },
+    "8": { min: "2500", max: "3500" },
+    "9": { min: "3500", max: "4500" },
+    "10": { min: "5000", max: "6000" },
+  };
+  let presetProfitCfg = JSON.parse(JSON.stringify(DEFAULT_PRESET_PROFIT_CFG));
   let presetPart4Assignment = null;
   let presetPart4PoolKey = "";
   let lastPresetRetryCtx = null;
@@ -342,15 +356,7 @@
     return trimTrailingZeroIn5dp(entryIntToText(next));
   }
 
-  function randomEntryInRange(minText, maxText) {
-    const a = parseEntryToInt(minText);
-    const b = parseEntryToInt(maxText);
-    if (a == null || b == null) return null;
-    const lo = Math.min(a, b);
-    const hi = Math.max(a, b);
-    const next = lo === hi ? lo : randInt(lo, hi);
-    return trimTrailingZeroIn5dp(entryIntToText(next));
-  }
+  // 프리셋 수익금 범위는 "만원" 단위 문자열을 저장합니다. (예: 50 ~ 100)
 
   function buildRenderItem(baseEntry) {
     const { percent, profit } = randomPercentProfit();
@@ -465,60 +471,60 @@
     };
   }
 
-  function normalizePresetEntryCfg(cfg) {
-    const out = JSON.parse(JSON.stringify(DEFAULT_PRESET_ENTRY_CFG));
+  function normalizePresetProfitCfg(cfg) {
+    const out = JSON.parse(JSON.stringify(DEFAULT_PRESET_PROFIT_CFG));
     if (!cfg || typeof cfg !== "object") return out;
     for (let i = 1; i <= 10; i++) {
       const k = String(i);
       const v = cfg[k];
       if (!v || typeof v !== "object") continue;
       out[k] = {
-        min: String(v.min ?? "").trim(),
-        max: String(v.max ?? "").trim(),
+        min: String(v.min ?? out[k]?.min ?? "").trim(),
+        max: String(v.max ?? out[k]?.max ?? "").trim(),
       };
     }
     return out;
   }
 
-  function fillPresetEntryUiFromCfg() {
+  function fillPresetProfitUiFromCfg() {
     for (let i = 1; i <= 10; i++) {
       const k = String(i);
-      const minEl = document.getElementById(`inpPresetEntryMin${k}`);
-      const maxEl = document.getElementById(`inpPresetEntryMax${k}`);
-      if (minEl) minEl.value = String(presetEntryCfg?.[k]?.min ?? "");
-      if (maxEl) maxEl.value = String(presetEntryCfg?.[k]?.max ?? "");
+      const minEl = document.getElementById(`inpPresetProfitMin${k}`);
+      const maxEl = document.getElementById(`inpPresetProfitMax${k}`);
+      if (minEl) minEl.value = String(presetProfitCfg?.[k]?.min ?? "");
+      if (maxEl) maxEl.value = String(presetProfitCfg?.[k]?.max ?? "");
     }
   }
 
-  function readPresetEntryCfgFromUi() {
-    const out = JSON.parse(JSON.stringify(DEFAULT_PRESET_ENTRY_CFG));
+  function readPresetProfitCfgFromUi() {
+    const out = JSON.parse(JSON.stringify(DEFAULT_PRESET_PROFIT_CFG));
     for (let i = 1; i <= 10; i++) {
       const k = String(i);
-      const minEl = document.getElementById(`inpPresetEntryMin${k}`);
-      const maxEl = document.getElementById(`inpPresetEntryMax${k}`);
-      const min = minEl ? String(minEl.value ?? "").trim() : "";
-      const max = maxEl ? String(maxEl.value ?? "").trim() : "";
+      const minEl = document.getElementById(`inpPresetProfitMin${k}`);
+      const maxEl = document.getElementById(`inpPresetProfitMax${k}`);
+      const min = minEl ? String(minEl.value ?? "").trim() : String(out[k]?.min ?? "");
+      const max = maxEl ? String(maxEl.value ?? "").trim() : String(out[k]?.max ?? "");
       out[k] = { min, max };
     }
     return out;
   }
 
-  function bindPresetEntryUi() {
+  function bindPresetProfitUi() {
     const onEdit = () => {
-      presetEntryCfg = readPresetEntryCfgFromUi();
+      presetProfitCfg = readPresetProfitCfgFromUi();
       scheduleCloudSave();
     };
     for (let i = 1; i <= 10; i++) {
       const k = String(i);
-      const minEl = document.getElementById(`inpPresetEntryMin${k}`);
-      const maxEl = document.getElementById(`inpPresetEntryMax${k}`);
+      const minEl = document.getElementById(`inpPresetProfitMin${k}`);
+      const maxEl = document.getElementById(`inpPresetProfitMax${k}`);
       [minEl, maxEl].forEach((el) => {
         if (!el) return;
         el.addEventListener("input", onEdit);
         el.addEventListener("change", onEdit);
       });
     }
-    fillPresetEntryUiFromCfg();
+    fillPresetProfitUiFromCfg();
   }
 
   function getPart4ListAll(cfg) {
@@ -600,7 +606,7 @@
       },
       phraseCfg,
       cropCfg,
-      presetEntryCfg,
+      presetProfitCfg,
       cardCustomStyles,
     };
   }
@@ -670,10 +676,13 @@
       cropCfg = { ...DEFAULT_CROP_CFG };
     }
 
-    presetEntryCfg = normalizePresetEntryCfg(state.presetEntryCfg);
+    // 마이그레이션: 이전 버전에서 presetEntryCfg(진입가)로 저장했던 값을
+    // 이번 버전에서는 presetProfitCfg(수익금)로 재사용합니다.
+    // (사용자가 "기존 진입가 범위에서 수정" 요청)
+    presetProfitCfg = normalizePresetProfitCfg(state.presetProfitCfg || state.presetEntryCfg);
     fillPhraseUiFromCfg();
     fillCropUiFromCfg();
-    fillPresetEntryUiFromCfg();
+    fillPresetProfitUiFromCfg();
     syncBgShiftInputs();
     syncOverlayUi();
     applyOverlayToDom();
@@ -716,12 +725,28 @@
       return;
     }
     try {
-      const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=data&id=eq.${encodeURIComponent(SUPABASE_ROW_ID)}&limit=1`;
-      const res = await fetch(url, { headers: sbHeaders() });
-      if (!res.ok) throw new Error(`load failed: ${res.status}`);
-      const rows = await res.json();
-      if (rows && rows[0] && rows[0].data) {
-        applyState(rows[0].data);
+      const fetchRow = async (id) => {
+        const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=data&id=eq.${encodeURIComponent(id)}&limit=1`;
+        const res = await fetch(url, { headers: sbHeaders() });
+        if (!res.ok) throw new Error(`load failed: ${res.status}`);
+        const rows = await res.json();
+        return rows && rows[0] && rows[0].data ? rows[0].data : null;
+      };
+
+      const rowId = getSupabaseRowId();
+      let data = await fetchRow(rowId);
+      // 마이그레이션: 예전 버전은 "default"에 저장했으니, 새 키에 데이터가 없으면 가져옵니다.
+      if (!data && rowId !== "default") {
+        data = await fetchRow("default");
+        if (data) {
+          applyState(data);
+          showToastFor("클라우드(이전 데이터) 불러옴", 1400);
+          scheduleCloudSave();
+          return;
+        }
+      }
+      if (data) {
+        applyState(data);
         showToastFor("클라우드 불러오기 완료", 1200);
       } else {
         showToastFor("클라우드 데이터 없음", 1200);
@@ -735,8 +760,9 @@
   async function cloudSaveNow({ silent = false, keepalive = false } = {}) {
     if (!cloudConfigured()) return;
     try {
+      const rowId = getSupabaseRowId();
       const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?on_conflict=id`;
-      const body = [{ id: SUPABASE_ROW_ID, data: collectState() }];
+      const body = [{ id: rowId, data: collectState() }];
       cloudSavePending = false;
       const res = await fetch(url, {
         method: "POST",
@@ -1546,13 +1572,14 @@
         if (els.profitMin && pmin != null) els.profitMin.value = String(pmin);
         if (els.profitMax && pmax != null) els.profitMax.value = String(pmax);
 
-        // 프리셋별 진입가 범위가 설정되어 있으면, 범위 내에서 랜덤 진입가를 적용
-        const ec = presetId != null ? presetEntryCfg?.[String(presetId)] : null;
-        if (els.entry && ec && ec.min && ec.max) {
-          const nextEntry = randomEntryInRange(ec.min, ec.max);
-          if (nextEntry != null) {
-            els.entry.value = nextEntry;
-            setTs(LS_ENTRY_TS);
+        // 프리셋별 수익금(만원) 범위 설정을 우선 적용
+        const pc = presetId != null ? presetProfitCfg?.[String(presetId)] : null;
+        if (els.profitMin && els.profitMax && pc && pc.min != null && pc.max != null) {
+          const mn = String(pc.min).trim();
+          const mx = String(pc.max).trim();
+          if (mn !== "" && mx !== "") {
+            els.profitMin.value = mn;
+            els.profitMax.value = mx;
             scheduleCloudSave();
           }
         }
@@ -2311,7 +2338,7 @@
   async function init() {
     initMaskedPreview();
     bindPhraseUi();
-    bindPresetEntryUi();
+    bindPresetProfitUi();
     bindCropUi();
     bind();
     bindSideUi();
