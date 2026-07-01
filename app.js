@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070106";
+  const BUILD_VERSION = "t26070107";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -135,6 +135,82 @@
   let presetPart4PoolKey = "";
   let lastPresetRetryCtx = null;
   let presetRetryArmed = false;
+
+  function ensureCropGuideEl() {
+    if (!els.cardRoot) return null;
+    let el = document.getElementById("cropGuide");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "cropGuide";
+      el.className = "crop-guide";
+      el.setAttribute("data-html2canvas-ignore", "true");
+      els.cardRoot.appendChild(el);
+    }
+    return el;
+  }
+
+  function computeCropBoundsForUi() {
+    if (!els.cardRoot) return null;
+    const rr = els.cardRoot.getBoundingClientRect();
+    const W = rr.width;
+    const H = rr.height;
+
+    const percentRect =
+      getRectForSelectors(["#txtPercent", "#txtPercentSign"]) ||
+      getRectForSelector("#txtPercent") ||
+      { x: 0, y: 0, w: 1, h: 1 };
+    const profitRect = getRectForSelectors(["#txtProfit"]) || getRectForSelector("#txtProfit") || percentRect;
+    const exitRect = getRectForSelector("#txtExit") || profitRect;
+    const requiredRect = rectUnion(percentRect, profitRect);
+
+    const startPadXMax = Math.max(0, Math.round(cropCfg?.startPadXMax ?? DEFAULT_CROP_CFG.startPadXMax));
+    const startPadYMax = Math.max(0, Math.round(cropCfg?.startPadYMax ?? DEFAULT_CROP_CFG.startPadYMax));
+    const x = Math.max(0, Math.floor(percentRect.x - Math.round(startPadXMax / 2)));
+    const y = Math.max(0, Math.floor(percentRect.y - Math.round(startPadYMax / 2)));
+
+    const requiredRight = Math.ceil(requiredRect.x + requiredRect.w);
+    const widthMinRatio = clamp((cropCfg?.widthMinPct ?? DEFAULT_CROP_CFG.widthMinPct) / 100, 0.01, 1);
+    const widthMaxRatio = clamp((cropCfg?.widthMaxPct ?? DEFAULT_CROP_CFG.widthMaxPct) / 100, widthMinRatio, 1);
+
+    let minW = Math.round(widthMinRatio * W);
+    let maxW = Math.round(widthMaxRatio * W);
+    minW = Math.max(1, Math.min(W - x, minW));
+    maxW = Math.max(1, Math.min(W - x, maxW));
+
+    // 텍스트(퍼센트+수익금)가 잘리지 않게 자동 보정되는 최소 폭
+    const minAllowed = Math.min(W - x, Math.max(minW, requiredRight - x));
+    const maxAllowed = Math.min(W - x, Math.max(maxW, requiredRight - x));
+
+    const padBottomMin = Math.max(0, Math.round(cropCfg?.bottomPadMin ?? DEFAULT_CROP_CFG.bottomPadMin));
+    const padBottomMax = Math.max(padBottomMin, Math.round(cropCfg?.bottomPadMax ?? DEFAULT_CROP_CFG.bottomPadMax));
+    const padBottomMid = Math.round((padBottomMin + padBottomMax) / 2);
+
+    const minH = Math.ceil(profitRect.y + profitRect.h + padBottomMid) - y;
+    const maxH = Math.ceil(exitRect.y + exitRect.h + padBottomMid) - y;
+    const lo = Math.max(1, Math.min(H - y, Math.min(minH, maxH)));
+    const hi = Math.max(lo, Math.min(H - y, Math.max(minH, maxH)));
+    const sampleH = Math.round((lo + hi) / 2);
+
+    return { W, H, x, y, minW: minAllowed, maxW: maxAllowed, h: sampleH };
+  }
+
+  function updateCropGuideUi() {
+    const guide = ensureCropGuideEl();
+    const bounds = computeCropBoundsForUi();
+    if (!guide || !bounds) return;
+    guide.style.left = `${bounds.x}px`;
+    guide.style.top = `${bounds.y}px`;
+    guide.style.width = `${Math.max(1, bounds.minW)}px`;
+    guide.style.height = `${Math.max(1, bounds.h)}px`;
+
+    const summary = document.getElementById("cropSummary");
+    if (summary) {
+      const minPct = Math.round((bounds.minW / bounds.W) * 100);
+      const maxPct = Math.round((bounds.maxW / bounds.W) * 100);
+      summary.textContent =
+        `가로(좌우) 실제 크롭 범위: 약 ${minPct}% ~ ${maxPct}% (오른쪽이 잘림).`;
+    }
+  }
 
   function showToast(message) {
     if (!els.toast) return;
@@ -625,6 +701,14 @@
     setVal("inpCropStartPadYMax", Math.max(0, Math.round(cropCfg.startPadYMax)));
     setVal("inpCropBottomPadMin", Math.max(0, Math.round(cropCfg.bottomPadMin)));
     setVal("inpCropBottomPadMax", Math.max(0, Math.round(cropCfg.bottomPadMax)));
+
+    const setText = (id, v) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(v);
+    };
+    setText("lblCropFullCaptureProb", clamp(cropCfg.fullCaptureProb, 0, 100));
+    setText("lblCropWidthMinPct", clamp(cropCfg.widthMinPct, 1, 100));
+    setText("lblCropWidthMaxPct", clamp(cropCfg.widthMaxPct, 1, 100));
   }
 
   function readCropCfgFromUi() {
@@ -879,10 +963,10 @@
 
     // 텍스트 실제 글자 기준(폭 100% 요소 제외)
     const percentRect =
-      getRectForSelectors([".dr2-value .plus-sign", "#txtPercent", ".dr2-value .percent-sign"]) ||
-      getRectForSelector(".dr2-value") ||
+      getRectForSelectors(["#txtPercent", "#txtPercentSign"]) ||
+      getRectForSelector("#txtPercent") ||
       { x: 0, y: 0, w: 1, h: 1 };
-    const profitRect = getRectForSelectors([".dr3-value .plus-sign", "#txtProfit"]) || getRectForSelector(".dr3-value") || percentRect;
+    const profitRect = getRectForSelectors(["#txtProfit"]) || getRectForSelector("#txtProfit") || percentRect;
     const exitRect = getRectForSelector("#txtExit") || profitRect;
 
     // "무조건 포함" 영역(수익퍼센트 + 수익금액)
@@ -941,12 +1025,12 @@
     const rr = els.cardRoot.getBoundingClientRect();
 
     const percentRect =
-      getRectForSelectors([".dr2-value .plus-sign", "#txtPercent", ".dr2-value .percent-sign"]) ||
-      getRectForSelector(".dr2-value") ||
+      getRectForSelectors(["#txtPercent", "#txtPercentSign"]) ||
+      getRectForSelector("#txtPercent") ||
       { x: 0, y: 0, w: 1, h: 1 };
     const profitRect =
-      getRectForSelectors([".dr3-value .plus-sign", "#txtProfit"]) ||
-      getRectForSelector(".dr3-value") ||
+      getRectForSelectors(["#txtProfit"]) ||
+      getRectForSelector("#txtProfit") ||
       percentRect;
     const requiredRect = rectUnion(percentRect, profitRect);
 
@@ -1320,6 +1404,7 @@
     const onEdit = () => {
       cropCfg = readCropCfgFromUi();
       fillCropUiFromCfg();
+      updateCropGuideUi();
       scheduleCloudSave();
     };
     ids.forEach((id) => {
@@ -1328,6 +1413,9 @@
       el.addEventListener("input", onEdit);
       el.addEventListener("change", onEdit);
     });
+
+    // 초기 가이드 표시
+    updateCropGuideUi();
   }
 
   function bindSideUi() {
