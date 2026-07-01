@@ -390,6 +390,15 @@ button.secondary{ background:#0c1220; }
 }
 @media (max-width:1160px){
   .app{ grid-template-columns:1fr; }
+  .preview,
+  .controls,
+  .sidepanel{
+    position:static;
+    top:auto;
+    max-height:none;
+    overflow:visible;
+    align-self:auto;
+  }
   .controls{ width:100%; min-width:0; max-width:none; }
 }
 
