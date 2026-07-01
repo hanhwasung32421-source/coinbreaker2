@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t260630.46";
+  const BUILD_VERSION = "t260630.47";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -231,6 +231,14 @@
     return `${Number(won).toLocaleString("en-US")} 원`;
   }
 
+  function formatPercentText(value) {
+    let percentText = Number(value).toFixed(2);
+    if (percentText.includes(".")) {
+      percentText = percentText.replace(/0+$/, "").replace(/\.$/, "");
+    }
+    return percentText;
+  }
+
   function parseEntryToInt(entryText) {
     const n = Number(String(entryText || "").trim());
     if (!Number.isFinite(n)) return null;
@@ -252,6 +260,40 @@
     if (baseInt == null) return String(entryBaseText || "").trim();
     const next = Math.max(0, baseInt + [-2, -1, 0, 1, 2][randInt(0, 4)]);
     return trimTrailingZeroIn5dp(entryIntToText(next));
+  }
+
+  function buildRenderItem(baseEntry) {
+    const { percent, profit } = randomPercentProfit();
+    return { percent, profit, entry: randomEntryFromBase(baseEntry) };
+  }
+
+  function getRenderSignature(item) {
+    if (!item) return "";
+    return [
+      formatPercentText(item.percent),
+      formatProfit(item.profit),
+      String(item.entry || "").trim(),
+    ].join("|");
+  }
+
+  function getCurrentRenderSignature() {
+    return [
+      String(els.txtPercent?.textContent || "").trim(),
+      String(els.txtProfit?.textContent || "").trim(),
+      String(els.entryReal?.value || "").trim(),
+    ].join("|");
+  }
+
+  function buildRenderItemDifferentFrom(baseEntry, avoidSignature) {
+    let fallback = buildRenderItem(baseEntry);
+    if (!avoidSignature) return fallback;
+    if (getRenderSignature(fallback) !== avoidSignature) return fallback;
+    for (let i = 0; i < 48; i++) {
+      const item = buildRenderItem(baseEntry);
+      fallback = item;
+      if (getRenderSignature(item) !== avoidSignature) return item;
+    }
+    return fallback;
   }
 
   function parseLeverage(text) {
@@ -688,10 +730,7 @@
   }
 
   function renderCard(item) {
-    let percentText = Number(item.percent).toFixed(2);
-    if (percentText.includes(".")) {
-      percentText = percentText.replace(/0+$/, "").replace(/\.$/, "");
-    }
+    const percentText = formatPercentText(item.percent);
     if (els.txtPercent) els.txtPercent.textContent = percentText;
     if (els.txtProfit) els.txtProfit.textContent = formatProfit(item.profit);
     if (els.txtSymbol) els.txtSymbol.textContent = String(els.symbol?.value || "").trim();
@@ -1096,10 +1135,12 @@
     triggerWarningFlash();
     const n = getCount();
     const baseEntry = String(els.entry?.value || "").trim();
-    generatedItems = Array.from({ length: n }, () => {
-      const { percent, profit } = randomPercentProfit();
-      return { percent, profit, entry: randomEntryFromBase(baseEntry) };
-    });
+    const currentSignature = getCurrentRenderSignature();
+    generatedItems = Array.from({ length: n }, (_, index) =>
+      index === 0
+        ? buildRenderItemDifferentFrom(baseEntry, currentSignature)
+        : buildRenderItem(baseEntry)
+    );
     previewIndex = generatedItems.length > 0 ? 0 : -1;
     renderAll();
   }
