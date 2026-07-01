@@ -6,7 +6,7 @@
     <title>Coin Breaker (Maker)</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
     <!-- fallback 스타일(메인 CSS 주입 성공 시 자동 비활성화) -->
-    <link id="fallbackCss" rel="stylesheet" href="../style.css?v=t26070110" />
+    <link id="fallbackCss" rel="stylesheet" href="../style.css?v=t26070111" />
     <!-- 메인(index.html)과 동일한 렌더링 CSS를 그대로 주입 -->
     <script>
       (async () => {
@@ -39,7 +39,7 @@
   <body>
     <div class="topbar">
       <div class="topbar-left">Coin Breaker</div>
-      <div class="topbar-right">버전 <span id="buildVersion">t26070110</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">t26070111</span></div>
     </div>
 
     <div class="app">
@@ -163,36 +163,6 @@
           <label class="span-2">종료가격(자동)<input id="inpExit" type="text" value="0.00000" disabled /></label>
           <label class="span-2">레버리지<input id="inpLeverage" type="text" value="100x" /></label>
 
-          <label class="span-2">
-            배경 확대/축소 (0.50~2.00, 1.00=기본)
-            <input id="inpBgZoom" type="number" step="0.001" min="0.5" max="2" value="1.000" />
-            <div class="zoom-stepper">
-              <button id="btnZoomOut" class="secondary" type="button">축소 -5%</button>
-              <button id="btnZoomIn" class="secondary" type="button">확대 +5%</button>
-            </div>
-          </label>
-
-          <label class="span-2">
-            배경 위치 이동 (X / Y)
-            <div class="dual-input">
-              <input id="inpBgShiftX" type="number" placeholder="X" value="0" />
-              <input id="inpBgShiftY" type="number" placeholder="Y" value="0" />
-            </div>
-            <div class="shift-stepper">
-              <div class="shift-row">
-                <button id="btnShiftUp" class="secondary" type="button">▲ 위로</button>
-              </div>
-              <div class="shift-row">
-                <button id="btnShiftLeft" class="secondary" type="button">◀ 왼쪽</button>
-                <button id="btnShiftReset" class="secondary" type="button">↺ 리셋</button>
-                <button id="btnShiftRight" class="secondary" type="button">오른쪽 ▶</button>
-              </div>
-              <div class="shift-row">
-                <button id="btnShiftDown" class="secondary" type="button">▼ 아래로</button>
-              </div>
-            </div>
-          </label>
-
           <label>생성 개수<input id="inpCount" type="number" min="1" max="300" value="1" /></label>
           <label>ZIP 파일명 Prefix<input id="inpPrefix" type="text" value="screenshot" /></label>
         </div>
@@ -210,6 +180,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t26070110"></script>
+    <script src="../app.js?v=t26070111"></script>
   </body>
 </html>
