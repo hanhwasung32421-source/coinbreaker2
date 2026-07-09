@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070902";
+  const BUILD_VERSION = "260709110215";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -15,6 +15,10 @@
     // (메인/컨트롤: main, maker: maker)
     if (p.includes("/maker/") || p.endsWith("/maker") || p.endsWith("/maker/index.html")) return "maker";
     return "main";
+  }
+
+  function isMakerPage() {
+    return getSupabaseRowId() === "maker";
   }
 
   const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -471,6 +475,26 @@
     };
   }
 
+  async function fetchCloudRow(id) {
+    const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=data&id=eq.${encodeURIComponent(id)}&limit=1`;
+    const res = await fetch(url, { headers: sbHeaders() });
+    if (!res.ok) throw new Error(`load failed: ${res.status}`);
+    const rows = await res.json();
+    return rows && rows[0] && rows[0].data ? rows[0].data : null;
+  }
+
+  function mergeSharedLayoutState(baseState, sharedLayoutState) {
+    const base = baseState && typeof baseState === "object" ? baseState : {};
+    const shared = sharedLayoutState && typeof sharedLayoutState === "object" ? sharedLayoutState : null;
+    if (!shared) return base;
+    return {
+      ...base,
+      bg: shared.bg ?? base.bg,
+      overlay: shared.overlay ?? base.overlay,
+      cardCustomStyles: shared.cardCustomStyles ?? base.cardCustomStyles,
+    };
+  }
+
   function linesToWeightedArray(text, fallbackArr) {
     const lines = String(text ?? "").replace(/\r\n/g, "\n").split("\n").map((x) => x.trimEnd());
     const out = [];
@@ -779,30 +803,34 @@
       return;
     }
     try {
-      const fetchRow = async (id) => {
-        const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=data&id=eq.${encodeURIComponent(id)}&limit=1`;
-        const res = await fetch(url, { headers: sbHeaders() });
-        if (!res.ok) throw new Error(`load failed: ${res.status}`);
-        const rows = await res.json();
-        return rows && rows[0] && rows[0].data ? rows[0].data : null;
-      };
-
       const rowId = getSupabaseRowId();
-      let data = await fetchRow(rowId);
+      let data = await fetchCloudRow(rowId);
       // 마이그레이션: 예전 버전은 "default"에 저장했으니, 새 키에 데이터가 없으면 가져옵니다.
       if (!data && rowId !== "default") {
-        data = await fetchRow("default");
+        data = await fetchCloudRow("default");
         if (data) {
-          applyState(data);
+          const merged = isMakerPage() ? mergeSharedLayoutState(data, await fetchCloudRow("main")) : data;
+          applyState(merged);
           showToastFor("클라우드(이전 데이터) 불러옴", 1400);
           scheduleCloudSave();
           return;
         }
       }
       if (data) {
+        if (isMakerPage()) {
+          data = mergeSharedLayoutState(data, await fetchCloudRow("main"));
+        }
         applyState(data);
         showToastFor("클라우드 불러오기 완료", 1200);
       } else {
+        if (isMakerPage()) {
+          const layoutOnly = mergeSharedLayoutState(null, await fetchCloudRow("main"));
+          if (layoutOnly && (layoutOnly.cardCustomStyles || layoutOnly.overlay || layoutOnly.bg)) {
+            applyState(layoutOnly);
+            showToastFor("메이커 설정 없음, 메인 레이아웃만 불러옴", 1400);
+            return;
+          }
+        }
         showToastFor("클라우드 데이터 없음", 1200);
       }
     } catch (e) {

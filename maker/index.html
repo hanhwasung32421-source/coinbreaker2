@@ -6,7 +6,7 @@
     <title>Coin Breaker (Maker)</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
     <!-- fallback 스타일(메인 CSS 주입 성공 시 자동 비활성화) -->
-    <link id="fallbackCss" rel="stylesheet" href="../style.css?v=t26070116" />
+    <link id="fallbackCss" rel="stylesheet" href="../style.css?v=260709110215" />
     <!-- 메인(index.html)과 동일한 렌더링 CSS를 그대로 주입 -->
     <script>
       (async () => {
@@ -39,7 +39,7 @@
   <body>
     <div class="topbar">
       <div class="topbar-left">Coin Breaker</div>
-      <div class="topbar-right">버전 <span id="buildVersion">t26070116</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">260709110215</span></div>
     </div>
 
     <div class="app">
@@ -160,6 +160,29 @@
             </div>
           </label>
 
+          <details class="phrase-settings span-2">
+            <summary>진입가격 랜덤 설정</summary>
+            <div class="phrase-help">
+              메이커에서도 브레이커 메인과 별개로 진입가/종료가 랜덤 규칙을 설정합니다. 이 값은 메이커 전용으로 저장됩니다.
+            </div>
+            <div class="dual-input">
+              <label>랜덤 자리(소수점 n번째)
+                <input id="inpEntryRandPlace" type="number" min="1" max="5" step="1" value="2" />
+              </label>
+              <label>랜덤 갭(±n)
+                <input id="inpEntryRandGap" type="number" min="0" max="20" step="1" value="2" />
+              </label>
+            </div>
+            <div class="dual-input">
+              <label>진입가 000 확률(%)
+                <input id="inpEntryZeroProb" type="number" min="0" max="100" step="1" value="50" />
+              </label>
+              <label>종료가 000 확률(%)
+                <input id="inpExitZeroProb" type="number" min="0" max="100" step="1" value="50" />
+              </label>
+            </div>
+          </details>
+
           <label class="span-2">종료가격(자동)<input id="inpExit" type="text" value="0.00000" disabled /></label>
           <label class="span-2">레버리지<input id="inpLeverage" type="text" value="100x" /></label>
 
@@ -180,6 +203,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../app.js?v=t26070116"></script>
+    <script src="../app.js?v=260709110215"></script>
   </body>
 </html>
