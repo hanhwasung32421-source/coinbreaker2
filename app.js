@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070116";
+  const BUILD_VERSION = "260709101432";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -51,6 +51,8 @@
     leverage: document.getElementById("inpLeverage"),
     entry: document.getElementById("inpEntry"),
     entryReal: document.getElementById("inpEntryReal"),
+    entryRandPlace: document.getElementById("inpEntryRandPlace"),
+    entryRandGap: document.getElementById("inpEntryRandGap"),
     exit: document.getElementById("inpExit"),
     bgZoom: document.getElementById("inpBgZoom"),
     bgShiftX: document.getElementById("inpBgShiftX"),
@@ -126,6 +128,10 @@
     // (빈칸은 "추가 문구가 안 붙는" 효과)
     part4: ["", "", "", "", "", "", "", "대표님.", "대단하십니다.", "대박입니다."],
     part4Prob: 25,
+  };
+  const DEFAULT_ENTRY_VARIATION_CFG = {
+    decimalPlace: 2,
+    gap: 2,
   };
   let phraseCfg = JSON.parse(JSON.stringify(DEFAULT_PHRASE_CFG));
   const DEFAULT_CROP_CFG = {
@@ -349,11 +355,34 @@
     return s.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
   }
 
+  function getEntryVariationCfg() {
+    return {
+      decimalPlace: Math.round(clamp(els.entryRandPlace?.value, 1, 8)),
+      gap: Math.round(clamp(els.entryRandGap?.value, 0, 20)),
+    };
+  }
+
+  function setEntryVariationUi(cfg) {
+    const next = cfg && typeof cfg === "object" ? cfg : DEFAULT_ENTRY_VARIATION_CFG;
+    if (els.entryRandPlace) els.entryRandPlace.value = String(Math.round(clamp(next.decimalPlace, 1, 8)));
+    if (els.entryRandGap) els.entryRandGap.value = String(Math.round(clamp(next.gap, 0, 20)));
+  }
+
+  function countFractionDigits(text) {
+    const raw = String(text || "").trim();
+    const idx = raw.indexOf(".");
+    return idx >= 0 ? raw.length - idx - 1 : 0;
+  }
+
   function randomEntryFromBase(entryBaseText) {
-    const baseInt = parseEntryToInt(entryBaseText);
-    if (baseInt == null) return String(entryBaseText || "").trim();
-    const next = Math.max(0, baseInt + [-2, -1, 0, 1, 2][randInt(0, 4)]);
-    return trimTrailingZeroIn5dp(entryIntToText(next));
+    const baseText = String(entryBaseText || "").trim();
+    const baseNum = Number(baseText);
+    if (!Number.isFinite(baseNum)) return baseText;
+    const { decimalPlace, gap } = getEntryVariationCfg();
+    const precision = Math.max(countFractionDigits(baseText), decimalPlace);
+    const delta = randInt(-gap, gap);
+    const next = Math.max(0, baseNum + delta * Math.pow(10, -decimalPlace));
+    return trimTrailingZeroIn5dp(next.toFixed(precision));
   }
 
   // 프리셋 수익금 범위는 "만원" 단위 문자열을 저장합니다. (예: 50 ~ 100)
@@ -592,6 +621,8 @@
         side: toVal(els.side),
         leverage: toVal(els.leverage),
         entry: toVal(els.entry),
+        entryRandPlace: toVal(els.entryRandPlace),
+        entryRandGap: toVal(els.entryRandGap),
         bgZoom: toVal(els.bgZoom),
         count: toVal(els.count),
         prefix: toVal(els.prefix),
@@ -605,6 +636,7 @@
         y: Math.round(Number(overlayState?.y) || 0),
       },
       phraseCfg,
+      entryVariationCfg: getEntryVariationCfg(),
       cropCfg,
       presetProfitCfg,
       cardCustomStyles,
@@ -626,6 +658,10 @@
     if (s.side) setSide(String(s.side).toUpperCase(), { shouldSave: false });
     setVal(els.leverage, s.leverage);
     setVal(els.entry, s.entry);
+    setEntryVariationUi({
+      decimalPlace: state.entryVariationCfg?.decimalPlace ?? s.entryRandPlace ?? DEFAULT_ENTRY_VARIATION_CFG.decimalPlace,
+      gap: state.entryVariationCfg?.gap ?? s.entryRandGap ?? DEFAULT_ENTRY_VARIATION_CFG.gap,
+    });
     setVal(els.bgZoom, s.bgZoom);
     setVal(els.count, s.count);
     setVal(els.prefix, s.prefix);
@@ -1413,6 +1449,26 @@
     });
   }
 
+  function bindEntryVariationUi() {
+    setEntryVariationUi({
+      decimalPlace: els.entryRandPlace?.value || DEFAULT_ENTRY_VARIATION_CFG.decimalPlace,
+      gap: els.entryRandGap?.value || DEFAULT_ENTRY_VARIATION_CFG.gap,
+    });
+    const onEdit = () => {
+      generatedItems = [];
+      previewIndex = -1;
+      sampleEntry = null;
+      lastEntryBase = null;
+      renderAll();
+      scheduleCloudSave();
+    };
+    [els.entryRandPlace, els.entryRandGap].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("input", onEdit);
+      el.addEventListener("change", onEdit);
+    });
+  }
+
   function bindCropUi() {
     fillCropUiFromCfg();
     const ids = [
@@ -1459,14 +1515,22 @@
     };
     [
       els.percentMin, els.percentMax, els.profitMin, els.profitMax, els.symbol,
-      els.leverage, els.entry, els.bgZoom, els.count, els.prefix,
+      els.leverage, els.bgZoom, els.count, els.prefix,
     ].forEach((el) => {
       if (!el) return;
       el.addEventListener("input", reRender);
       el.addEventListener("change", reRender);
     });
     if (els.entry) {
-      const mark = () => setTs(LS_ENTRY_TS);
+      const mark = () => {
+        setTs(LS_ENTRY_TS);
+        generatedItems = [];
+        previewIndex = -1;
+        sampleEntry = null;
+        lastEntryBase = null;
+        renderAll();
+        scheduleCloudSave();
+      };
       els.entry.addEventListener("input", mark);
       els.entry.addEventListener("change", mark);
     }
@@ -1494,6 +1558,7 @@
         els.symbol.value = DEFAULTS.symbol;
         els.leverage.value = DEFAULTS.leverage;
         els.entry.value = DEFAULTS.entry;
+        setEntryVariationUi(DEFAULT_ENTRY_VARIATION_CFG);
         els.bgZoom.value = String(DEFAULTS.bgZoom.toFixed(3));
         if (els.count) els.count.value = String(DEFAULTS.count);
         if (els.prefix) els.prefix.value = DEFAULTS.prefix;
@@ -2338,6 +2403,7 @@
   async function init() {
     initMaskedPreview();
     bindPhraseUi();
+    bindEntryVariationUi();
     bindPresetProfitUi();
     bindCropUi();
     bind();

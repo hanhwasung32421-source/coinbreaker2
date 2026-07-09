@@ -637,7 +637,7 @@ button.secondary{ background:#0c1220; }
           >maker</a
         >
       </div>
-      <div class="topbar-right">버전 <span id="buildVersion">t26070116</span></div>
+      <div class="topbar-right">버전 <span id="buildVersion">260709101432</span></div>
     </div>
     <div class="app">
       <div class="preview">
@@ -846,6 +846,20 @@ button.secondary{ background:#0c1220; }
               <input id="inpEntryReal" type="text" value="0.11445" disabled />
             </div>
           </label>
+          <details class="phrase-settings span-2">
+            <summary>진입가격 랜덤 설정</summary>
+            <div class="phrase-help">
+              프리셋/생성 시 진입가격이 기준값에서 어느 소수점 자리까지, 얼마나 랜덤하게 바뀔지 설정합니다. 예: 자리 2 / 갭 2 = 소수점 두번째 자리 기준 `±2`
+            </div>
+            <div class="dual-input">
+              <label>랜덤 자리(소수점 n번째)
+                <input id="inpEntryRandPlace" type="number" min="1" max="8" step="1" value="2" />
+              </label>
+              <label>랜덤 갭(±n)
+                <input id="inpEntryRandGap" type="number" min="0" max="20" step="1" value="2" />
+              </label>
+            </div>
+          </details>
           <label>종료가격(자동)<input id="inpExit" type="text" value="0.00000" disabled /></label>
           <label>레버리지<input id="inpLeverage" type="text" value="100x" /></label>
         </div>
@@ -859,6 +873,6 @@ button.secondary{ background:#0c1220; }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="./app.js?v=t26070116"></script>
+    <script src="./app.js?v=260709101432"></script>
   </body>
 </html>
