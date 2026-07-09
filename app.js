@@ -2,7 +2,7 @@
 (() => {
   // 빌드 버전(로컬에서 index.html을 바로 열어도 표시되도록 코드에 내장)
   // 수정할 때마다 값을 갱신합니다. 포맷: yyMMddHHmmss
-  const BUILD_VERSION = "t26070901";
+  const BUILD_VERSION = "260709104944";
 
   const SUPABASE_URL = "https://dyfycrmltqosezmsufup.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -53,6 +53,8 @@
     entryReal: document.getElementById("inpEntryReal"),
     entryRandPlace: document.getElementById("inpEntryRandPlace"),
     entryRandGap: document.getElementById("inpEntryRandGap"),
+    entryZeroProb: document.getElementById("inpEntryZeroProb"),
+    exitZeroProb: document.getElementById("inpExitZeroProb"),
     exit: document.getElementById("inpExit"),
     bgZoom: document.getElementById("inpBgZoom"),
     bgShiftX: document.getElementById("inpBgShiftX"),
@@ -132,6 +134,8 @@
   const DEFAULT_ENTRY_VARIATION_CFG = {
     decimalPlace: 2,
     gap: 2,
+    entryZeroProb: 50,
+    exitZeroProb: 50,
   };
   let phraseCfg = JSON.parse(JSON.stringify(DEFAULT_PHRASE_CFG));
   const DEFAULT_CROP_CFG = {
@@ -357,32 +361,39 @@
 
   function getEntryVariationCfg() {
     return {
-      decimalPlace: Math.round(clamp(els.entryRandPlace?.value, 1, 8)),
+      decimalPlace: Math.round(clamp(els.entryRandPlace?.value, 1, 5)),
       gap: Math.round(clamp(els.entryRandGap?.value, 0, 20)),
+      entryZeroProb: clamp(els.entryZeroProb?.value, 0, 100),
+      exitZeroProb: clamp(els.exitZeroProb?.value, 0, 100),
     };
   }
 
   function setEntryVariationUi(cfg) {
     const next = cfg && typeof cfg === "object" ? cfg : DEFAULT_ENTRY_VARIATION_CFG;
-    if (els.entryRandPlace) els.entryRandPlace.value = String(Math.round(clamp(next.decimalPlace, 1, 8)));
+    if (els.entryRandPlace) els.entryRandPlace.value = String(Math.round(clamp(next.decimalPlace, 1, 5)));
     if (els.entryRandGap) els.entryRandGap.value = String(Math.round(clamp(next.gap, 0, 20)));
+    if (els.entryZeroProb) els.entryZeroProb.value = String(clamp(next.entryZeroProb, 0, 100));
+    if (els.exitZeroProb) els.exitZeroProb.value = String(clamp(next.exitZeroProb, 0, 100));
   }
 
-  function countFractionDigits(text) {
-    const raw = String(text || "").trim();
-    const idx = raw.indexOf(".");
-    return idx >= 0 ? raw.length - idx - 1 : 0;
+  function applyPriceTailVariation(intVal, decimalPlace, zeroProb) {
+    const safeInt = Math.max(0, Math.round(Number(intVal) || 0));
+    const place = Math.round(clamp(decimalPlace, 1, 5));
+    const step = Math.pow(10, 5 - place);
+    if (step <= 1) return safeInt;
+    const head = Math.floor(safeInt / step) * step;
+    if (Math.random() < clamp(zeroProb, 0, 100) / 100) return head;
+    return head + randInt(0, step - 1);
   }
 
   function randomEntryFromBase(entryBaseText) {
-    const baseText = String(entryBaseText || "").trim();
-    const baseNum = Number(baseText);
-    if (!Number.isFinite(baseNum)) return baseText;
-    const { decimalPlace, gap } = getEntryVariationCfg();
-    const precision = Math.max(countFractionDigits(baseText), decimalPlace);
-    const delta = randInt(-gap, gap);
-    const next = Math.max(0, baseNum + delta * Math.pow(10, -decimalPlace));
-    return trimTrailingZeroIn5dp(next.toFixed(precision));
+    const baseInt = parseEntryToInt(entryBaseText);
+    if (baseInt == null) return String(entryBaseText || "").trim();
+    const { decimalPlace, gap, entryZeroProb } = getEntryVariationCfg();
+    const step = Math.pow(10, 5 - decimalPlace);
+    const shifted = Math.max(0, baseInt + randInt(-gap, gap) * step);
+    const finalInt = applyPriceTailVariation(shifted, decimalPlace, entryZeroProb);
+    return entryIntToText(finalInt);
   }
 
   // 프리셋 수익금 범위는 "만원" 단위 문자열을 저장합니다. (예: 50 ~ 100)
@@ -433,7 +444,10 @@
     const p = (Number(pnlPercent) / 100) / lev;
     const isShort = String(side || "").toUpperCase() === "SHORT";
     const raw = isShort ? e * (1 - p) : e * (1 + p);
-    return trimTrailingZeroIn5dp((Math.round((raw + Number.EPSILON) * 100000) / 100000).toFixed(5));
+    const baseInt = Math.max(0, Math.round((raw + Number.EPSILON) * 100000));
+    const { decimalPlace, exitZeroProb } = getEntryVariationCfg();
+    const finalInt = applyPriceTailVariation(baseInt, decimalPlace, exitZeroProb);
+    return entryIntToText(finalInt);
   }
 
   function getTs(key) {
@@ -623,6 +637,8 @@
         entry: toVal(els.entry),
         entryRandPlace: toVal(els.entryRandPlace),
         entryRandGap: toVal(els.entryRandGap),
+        entryZeroProb: toVal(els.entryZeroProb),
+        exitZeroProb: toVal(els.exitZeroProb),
         bgZoom: toVal(els.bgZoom),
         count: toVal(els.count),
         prefix: toVal(els.prefix),
@@ -661,6 +677,8 @@
     setEntryVariationUi({
       decimalPlace: state.entryVariationCfg?.decimalPlace ?? s.entryRandPlace ?? DEFAULT_ENTRY_VARIATION_CFG.decimalPlace,
       gap: state.entryVariationCfg?.gap ?? s.entryRandGap ?? DEFAULT_ENTRY_VARIATION_CFG.gap,
+      entryZeroProb: state.entryVariationCfg?.entryZeroProb ?? s.entryZeroProb ?? DEFAULT_ENTRY_VARIATION_CFG.entryZeroProb,
+      exitZeroProb: state.entryVariationCfg?.exitZeroProb ?? s.exitZeroProb ?? DEFAULT_ENTRY_VARIATION_CFG.exitZeroProb,
     });
     setVal(els.bgZoom, s.bgZoom);
     setVal(els.count, s.count);
@@ -1453,6 +1471,8 @@
     setEntryVariationUi({
       decimalPlace: els.entryRandPlace?.value || DEFAULT_ENTRY_VARIATION_CFG.decimalPlace,
       gap: els.entryRandGap?.value || DEFAULT_ENTRY_VARIATION_CFG.gap,
+      entryZeroProb: els.entryZeroProb?.value || DEFAULT_ENTRY_VARIATION_CFG.entryZeroProb,
+      exitZeroProb: els.exitZeroProb?.value || DEFAULT_ENTRY_VARIATION_CFG.exitZeroProb,
     });
     const onEdit = () => {
       generatedItems = [];
@@ -1462,7 +1482,7 @@
       renderAll();
       scheduleCloudSave();
     };
-    [els.entryRandPlace, els.entryRandGap].forEach((el) => {
+    [els.entryRandPlace, els.entryRandGap, els.entryZeroProb, els.exitZeroProb].forEach((el) => {
       if (!el) return;
       el.addEventListener("input", onEdit);
       el.addEventListener("change", onEdit);
